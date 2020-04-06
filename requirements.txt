@@ -1,4 +1,8 @@
-jupyter
+jupyterlab==0.35.6
 matplotlib
-mesa
-numpy
+Mesa==0.8.6
+numpy==1.17.1
+opencv-python==4.1.0.25
+pandas==0.24.0
+Pillow==6.2.0
+scipy==1.1.0
