@@ -41,16 +41,20 @@ class CoronavirusModel(Model):
 
         # Create agents
         choices = [CoronavirusAgentState.HEALTHY, CoronavirusAgentState.INFECTED]
-        for j in range(self.num_agents):
-            i += 1
-            a = CoronavirusAgent(i, self, self.random.choice(choices))
-            self.schedule.add(a)
+        agents_counter = 0
+        while agents_counter < self.num_agents:
 
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
 
             if (x,y) not in boundaries:
+                i += 1
+                agents_counter += 1
+                a = CoronavirusAgent(i, self, self.random.choice(choices))
+                self.schedule.add(a)
+
                 self.grid.place_agent(a, (x, y))
+
 
         self.running = True
         self.datacollector.collect(self)
