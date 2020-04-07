@@ -23,11 +23,9 @@ def agent_portrayal(agent):
     elif agent.state == CoronavirusAgentState.RECOVERED:
         portrayal["Color"] = "grey"
         portrayal["Layer"] = 2
-        portrayal['r'] = 0.15
     else:
         portrayal["Color"] = "green"
         portrayal["Layer"] = 1
-        portrayal['r'] = 0.25
 
     return portrayal
 
