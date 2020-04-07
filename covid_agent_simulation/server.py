@@ -1,9 +1,15 @@
-from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.ModularVisualization import ModularServer, VisualizationElement
 from .model import CoronavirusModel, CoronavirusAgentState
 
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
 from mesa.visualization.UserParam import UserSettableParameter
+
+
+class BackgroundSetter(VisualizationElement):
+    def __init__(self, url):
+        self.js_code = 'document.getElementsByClassName("world-grid")[0].style.background = ' \
+        '"url(' + "'{}'".format(url) +')";'
 
 
 def agent_portrayal(agent):
@@ -26,6 +32,7 @@ def agent_portrayal(agent):
     return portrayal
 
 
+back = BackgroundSetter("https://www.tooploox.com/cdn/academic-program.png-24378a904f32a566ccf799a2dc4bdf8928d75bbe.png")
 grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
 chart = ChartModule([
     {"Label": "Infected", "Color": "#FF0000"}, 
@@ -41,5 +48,5 @@ model_params = {
     "height": 10
 }
 
-server = ModularServer(CoronavirusModel, [grid, chart], "Coronavirus Model", model_params)
+server = ModularServer(CoronavirusModel, [grid, chart, back], "Coronavirus Model", model_params)
 server.port = 8521
