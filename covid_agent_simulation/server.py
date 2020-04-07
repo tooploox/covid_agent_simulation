@@ -22,7 +22,6 @@ def agent_portrayal(agent):
             portrayal["Color"] = "green"
             portrayal["Layer"] = 1
             portrayal['r'] = 0.25
-
     elif type(agent) is BoundaryPatch:
         portrayal = {}
         portrayal["Color"] = "grey"
@@ -31,8 +30,6 @@ def agent_portrayal(agent):
         portrayal["Layer"] = 0
         portrayal["w"] = 1
         portrayal["h"] = 1
-
-
     return portrayal
 
 

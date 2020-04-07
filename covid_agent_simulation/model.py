@@ -7,6 +7,7 @@ from enum import Enum
 
 MAX_INFECTION_STEPS = 14
 
+
 class BoundaryPatch(Agent):
     def __init__(self, unique_id, pos, model):
         '''
@@ -19,7 +20,6 @@ class BoundaryPatch(Agent):
         return
 
 
-
 class CoronavirusModel(Model):
     def __init__(self, N=10, width=10, height=10):
         self.num_agents = N
@@ -29,23 +29,28 @@ class CoronavirusModel(Model):
             model_reporters={"Infected": all_infected, "Healthy": all_healthy, "Recovered": all_recovered}
         )
 
+        i = 0
+        # Create boundaries
+        vert_bound = [(N//3,b) for b in range(N)]
+        horizontal_bound = [(a,N//2) for a in range(N//3)]
+        boundaries = vert_bound+horizontal_bound
+        for x,y in boundaries:
+            i += 1
+            patch = BoundaryPatch(i, (x, y), self)
+            self.grid.place_agent(patch, (x, y))
+
         # Create agents
         choices = [CoronavirusAgentState.HEALTHY, CoronavirusAgentState.INFECTED]
-        for i in range(self.num_agents):
+        for j in range(self.num_agents):
+            i += 1
             a = CoronavirusAgent(i, self, self.random.choice(choices))
             self.schedule.add(a)
 
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
-            self.grid.place_agent(a, (x, y))
 
-        # Create boundaries
-        vert_bound = [(N//3,b) for b in range(N)]
-        horizontal_bound = [(a,N//2) for a in range(N//3)]
-        for x,y in vert_bound+horizontal_bound:
-            i += 1
-            patch = BoundaryPatch(i, (x, y), self)
-            self.grid.place_agent(patch, (x, y))
+            if (x,y) not in boundaries:
+                self.grid.place_agent(a, (x, y))
 
         self.running = True
         self.datacollector.collect(self)
