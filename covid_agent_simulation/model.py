@@ -7,6 +7,19 @@ from enum import Enum
 
 MAX_INFECTION_STEPS = 14
 
+class BoundaryPatch(Agent):
+    def __init__(self, unique_id, pos, model):
+        '''
+        Creates a new patch of boundary
+
+        '''
+        super().__init__(unique_id, model)
+
+    def step(self):
+        return
+
+
+
 class CoronavirusModel(Model):
     def __init__(self, N=10, width=10, height=10):
         self.num_agents = N
@@ -16,6 +29,7 @@ class CoronavirusModel(Model):
             model_reporters={"Infected": all_infected, "Healthy": all_healthy, "Recovered": all_recovered}
         )
 
+        # Create agents
         choices = [CoronavirusAgentState.HEALTHY, CoronavirusAgentState.INFECTED]
         for i in range(self.num_agents):
             a = CoronavirusAgent(i, self, self.random.choice(choices))
@@ -24,6 +38,14 @@ class CoronavirusModel(Model):
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
             self.grid.place_agent(a, (x, y))
+
+        # Create boundaries
+        vert_bound = [(N//3,b) for b in range(N)]
+        horizontal_bound = [(a,N//2) for a in range(N//3)]
+        for x,y in vert_bound+horizontal_bound:
+            i += 1
+            patch = BoundaryPatch(i, (x, y), self)
+            self.grid.place_agent(patch, (x, y))
 
         self.running = True
         self.datacollector.collect(self)
@@ -54,13 +76,18 @@ class CoronavirusAgent(Agent):
             self.pos, moore=True, include_center=False
         )
         new_position = self.random.choice(possible_steps)
-        self.model.grid.move_agent(self, new_position)
+        this_cell = self.model.grid.get_cell_list_contents([new_position])
+        types = [type(obj) for obj in this_cell]
+        if BoundaryPatch  in types:
+            print(types)
+        else:
+            self.model.grid.move_agent(self, new_position)
 
     def infect(self):
         cellmates = self.model.grid.get_cell_list_contents([self.pos])
         if len(cellmates) > 1:
             other = self.random.choice(cellmates)
-            if other.state == CoronavirusAgentState.HEALTHY:
+            if type(other) is CoronavirusAgentState and other.state == CoronavirusAgentState.HEALTHY:
                 other.state = CoronavirusAgentState.INFECTED
 
     def step(self):
