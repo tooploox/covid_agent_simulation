@@ -2,6 +2,7 @@ from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
+import numpy as np
 
 from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
 
@@ -12,7 +13,9 @@ class CoronavirusModel(Model):
         self.grid = MultiGrid(height, width, False)
         self.schedule = RandomActivation(self)
         self.datacollector = DataCollector(
-            model_reporters={"Infected": all_infected, "Healthy": all_healthy, "Recovered": all_recovered}
+            model_reporters={"Infected": all_infected,
+                             "Healthy": all_healthy,
+                             "Recovered": all_recovered}
         )
         self.global_max_index = 0
 
@@ -31,28 +34,44 @@ class CoronavirusModel(Model):
     def setup_agents(self):
 
         choices = [CoronavirusAgentState.HEALTHY, CoronavirusAgentState.INFECTED]
+
+        home_coors = []
+        for info in self.grid.coord_iter():
+            contents = info[0]
+            coors = info[1:]
+            for object in contents:
+                if object.color == "yellow":
+                    home_coors.append(coors)
+
         for i in range(self.num_agents):
             a = CoronavirusAgent(self.get_unique_id(), self, self.random.choice(choices))
             self.schedule.add(a)
 
-            x = self.random.randrange(self.grid.width)
-            y = self.random.randrange(self.grid.height)
+            ind = np.random.randint(0, len(home_coors), 1)[0]
+            x, y = home_coors[ind]
             self.grid.place_agent(a, (x, y))
 
-    def setup_interior(self, init_row, init_column, width=3, height=4):
+    def setup_interior(self, init_row, init_column, width=3, height=4, color="yellow"):
         for x in range(init_column, init_column + width):
             for y in range(init_row, init_row + height):
-                home = InteriorAgent(self.get_unique_id(), self, "yellow")
-                self.grid.place_agent(home, (x, y))
+                interior = InteriorAgent(self.get_unique_id(), self, color)
+                self.grid.place_agent(interior, (x, y))
 
     def setup_interiors(self):
         homes_coor = [
             (0, 0),
             (0, 10),
-            (0, 30)
+            (0, 30),
+            (5, 10),
+            (10, 20)
         ]
+
+        object_coor = (20, 10)
         for coor in homes_coor:
             self.setup_interior(coor[0], coor[1])
+
+        self.setup_interior(object_coor[0], object_coor[1],
+                            width=20, height=10, color="blue")
 
     def step(self):
         self.schedule.step()

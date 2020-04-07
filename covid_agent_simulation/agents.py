@@ -11,11 +11,12 @@ class CoronavirusAgentState(Enum):
 
 class CoronavirusAgent(Agent):
 
-    def __init__(self, unique_id, model, state, max_infection_steps=14):
+    def __init__(self, unique_id, model, state, max_infection_steps=14, home_id=None):
         super().__init__(unique_id, model)
         self.state = state
         self.infected_steps = 0
         self.max_infection_steps = max_infection_steps
+        self.home_id = home_id
 
     def get_portrayal(self):
         portrayal = {"Shape": "circle",
