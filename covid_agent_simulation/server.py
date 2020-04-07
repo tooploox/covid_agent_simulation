@@ -9,7 +9,13 @@ from mesa.visualization.UserParam import UserSettableParameter
 class BackgroundSetter(VisualizationElement):
     def __init__(self, url):
         self.js_code = 'document.getElementsByClassName("world-grid")[0].style.background = ' \
-                       '"url(' + "'{}'".format(url) + ')";'
+        '"url(' + "'{}'".format(url) +')";'
+
+
+def agent_portrayal(agent):
+    portrayal = {"Shape": "circle",
+                 "Filled": "true",
+                 "r": 0.5}
 
 
 def agent_portrayal(agent):
