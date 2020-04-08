@@ -1,4 +1,5 @@
 from enum import Enum
+import math
 
 from mesa import Agent
 
@@ -20,10 +21,7 @@ class CoronavirusAgent(Agent):
 
     def get_portrayal(self):
         portrayal = {
-                     # "Shape": "circle",
-                     # "Filled": "true",
                      "Layer": 2,
-                     # "r": 0.5,
                      "scale": 2.5}
 
         if self.state == CoronavirusAgentState.INFECTED:
@@ -40,17 +38,19 @@ class CoronavirusAgent(Agent):
         possible_steps = self.model.grid.get_neighborhood(
             self.pos, moore=True, include_center=False
         )
-        new_position = self.random.choice(possible_steps)
-        self.model.grid.move_agent(self, new_position)
+
+        valid_steps = [p for p in possible_steps if not self.__is_cell_taken(p)]
+        if len(valid_steps) > 0:
+            self.model.grid.move_agent(self, self.random.choice(valid_steps))
 
     def infect(self):
-        cellmates = self.model.grid.get_cell_list_contents([self.pos])
-        agent_cellmates = list(filter(lambda x: type(x) is self, cellmates))
-
-        if len(agent_cellmates) > 1:
-            other = self.random.choice(agent_cellmates)
-            if other.state == CoronavirusAgentState.HEALTHY:
-                other.state = CoronavirusAgentState.INFECTED
+        neighbors = self.model.grid.get_neighbors(self.pos, True, False,
+                                                  len(self.model.infection_probabilities))
+        for n in neighbors:
+            if type(n) == CoronavirusAgent and \
+                    n.state == CoronavirusAgentState.HEALTHY and \
+                    self.random.uniform(0, 1) < self.model.infection_probabilities[moore_distance(self.pos, n.pos) - 1]:
+                n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
         self.move()
@@ -60,6 +60,13 @@ class CoronavirusAgent(Agent):
             else:
                 self.infected_steps += 1
                 self.infect()
+
+    def __is_cell_taken(self, pos):
+        agents_in_cell = self.model.grid.get_cell_list_contents(pos)
+        for a in agents_in_cell:
+            if type(a) == CoronavirusAgent:
+                return True
+        return False
 
 
 
@@ -77,10 +84,11 @@ class InteriorAgent(Agent):
 
     def get_portrayal(self):
         portrayal = {"Shape": self.shape,
-                     # "Filled": "true",
-                     # "Color": self.color,
                      "Layer": 0,
-                     # "w": 1,
-                     # "h": 1
-                     }
+                     "w": 1,
+                     "h": 1}
         return portrayal
+
+
+def moore_distance(p1, p2):
+    return math.floor(math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2))

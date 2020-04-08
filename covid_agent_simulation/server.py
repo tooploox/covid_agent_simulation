@@ -14,7 +14,6 @@ class BackgroundSetter(VisualizationElement):
 
 
 def agent_portrayal(agent):
-
     return agent.get_portrayal()
 
 
