@@ -100,12 +100,13 @@ def all_infected(model):
 
 
 def all_healthy(model):
-    return get_all_in_state(model, CoronavirusAgentState.RECOVERED)
-
-
-def all_recovered(model):
     return get_all_in_state(model, CoronavirusAgentState.HEALTHY)
 
 
+def all_recovered(model):
+    return get_all_in_state(model, CoronavirusAgentState.RECOVERED)
+
+
 def get_all_in_state(model, state):
-    return len([1 for agent in model.schedule.agents if agent.state == state])
+    return len([1 for agent in model.schedule.agents
+                if type(agent) == CoronavirusAgent and agent.state == state])
