@@ -12,4 +12,4 @@
 2. `mesa runserver .`
 
 ## Screenshot
-![](imgs/simulation.png)
+![](imgs/simulation_screen.png)
