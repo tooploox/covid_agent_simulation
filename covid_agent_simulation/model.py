@@ -64,10 +64,11 @@ class CoronavirusModel(Model):
             x, y = home_coors[ind]
             self.grid.place_agent(a, (x, y))
 
-    def setup_interior(self, init_row, init_column, width=3, height=4, color="yellow", shape=None):
+    def setup_interior(self, init_row, init_column, width=3, height=4,
+                       color="yellow", shape=None, interior_type=None):
         for x in range(init_column, init_column + width):
             for y in range(init_row, init_row + height):
-                interior = InteriorAgent(self.get_unique_id(), self, color, shape)
+                interior = InteriorAgent(self.get_unique_id(), self, color, shape, interior_type)
                 self.grid.place_agent(interior, (x, y))
 
     def setup_interiors(self):
@@ -81,10 +82,15 @@ class CoronavirusModel(Model):
 
         object_coor = (20, 10)
         for coor in homes_coor:
-            self.setup_interior(coor[0], coor[1], shape="covid_agent_simulation/resources/wall.png")
+            self.setup_interior(coor[0], coor[1],
+                                shape="covid_agent_simulation/resources/wall.png",
+                                interior_type='home'
+                                )
 
         self.setup_interior(object_coor[0], object_coor[1],
-                            width=20, height=10, shape="covid_agent_simulation/resources/grass.png")
+                            width=20, height=10,
+                            shape="covid_agent_simulation/resources/grass.png",
+                            interior_type='park')
 
     def step(self):
         self.schedule.step()
