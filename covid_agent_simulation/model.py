@@ -2,6 +2,7 @@ from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
+import math
 import numpy as np
 
 from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
@@ -21,7 +22,7 @@ class BoundaryPatch(Agent):
 
 
 class CoronavirusModel(Model):
-    def __init__(self, num_agents=10, width=10, height=10):
+    def __init__(self, num_agents=10, width=10, height=10, infection_probabilities=[0.7, 0.4]):
         self.num_agents = num_agents
         self.grid = MultiGrid(height, width, False)
         self.schedule = RandomActivation(self)
@@ -31,7 +32,7 @@ class CoronavirusModel(Model):
                              "Recovered": all_recovered}
         )
         self.global_max_index = 0
-
+        self.infection_probabilities = infection_probabilities
         self.setup_interiors()
         self.setup_agents()
 
@@ -45,7 +46,6 @@ class CoronavirusModel(Model):
         return unique_id
 
     def setup_agents(self):
-      
         choices = [CoronavirusAgentState.HEALTHY, CoronavirusAgentState.INFECTED]
         
         home_coors = []
@@ -94,17 +94,19 @@ class CoronavirusModel(Model):
         for i in range(n):
             self.step()
 
+
 def all_infected(model):
     return get_all_in_state(model, CoronavirusAgentState.INFECTED)
 
 
 def all_healthy(model):
-    return get_all_in_state(model, CoronavirusAgentState.RECOVERED)
-
-
-def all_recovered(model):
     return get_all_in_state(model, CoronavirusAgentState.HEALTHY)
 
 
+def all_recovered(model):
+    return get_all_in_state(model, CoronavirusAgentState.RECOVERED)
+
+
 def get_all_in_state(model, state):
-    return len([1 for agent in model.schedule.agents if agent.state == state])
+    return len([1 for agent in model.schedule.agents
+                if type(agent) == CoronavirusAgent and agent.state == state])
