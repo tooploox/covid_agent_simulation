@@ -2,7 +2,6 @@ from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
-import math
 import numpy as np
 
 from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
@@ -22,7 +21,7 @@ class BoundaryPatch(Agent):
 
 
 class CoronavirusModel(Model):
-    def __init__(self, num_agents=10, width=10, height=10, infection_probabilities=[0.7, 0.4]):
+    def __init__(self, num_agents=10, width=10, height=10, infection_probabilities=[0.7, 0.4], map=None):
         self.num_agents = num_agents
         self.grid = MultiGrid(height, width, False)
         self.schedule = RandomActivation(self)
@@ -33,7 +32,10 @@ class CoronavirusModel(Model):
         )
         self.global_max_index = 0
         self.infection_probabilities = infection_probabilities
-        self.setup_interiors()
+        if map is None:
+            self.setup_interiors_def()
+        else:
+            self.setup_interiors(map)
         self.setup_agents()
 
         self.running = True
@@ -64,13 +66,14 @@ class CoronavirusModel(Model):
             x, y = home_coors[ind]
             self.grid.place_agent(a, (x, y))
 
-    def setup_interior(self, init_row, init_column, width=3, height=4, color="yellow", shape=None):
+    def setup_interior(self, init_row, init_column, width=3, height=4, color="yellow", shape=None, id=None):
         for x in range(init_column, init_column + width):
             for y in range(init_row, init_row + height):
-                interior = InteriorAgent(self.get_unique_id(), self, color, shape)
+                agent_id = id if id is None else self.get_unique_id()
+                interior = InteriorAgent(agent_id, self, color, shape)
                 self.grid.place_agent(interior, (x, y))
 
-    def setup_interiors(self):
+    def setup_interiors_def(self):
         homes_coor = [
             (0, 0),
             (0, 10),
@@ -85,6 +88,12 @@ class CoronavirusModel(Model):
 
         self.setup_interior(object_coor[0], object_coor[1],
                             width=20, height=10, shape="covid_agent_simulation/resources/grass.png")
+
+    def setup_interiors(self, map):
+        for r in range(map.shape[0]):
+            for c in range(map.shape[1]):
+                if map[r, c] != 0:
+                    self.setup_interior(r, c, width=1, height=1, shape="covid_agent_simulation/resources/grass.png")
 
     def step(self):
         self.schedule.step()

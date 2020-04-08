@@ -22,7 +22,7 @@ class CoronavirusAgent(Agent):
     def get_portrayal(self):
         portrayal = {
                      "Layer": 2,
-                     "scale": 2.5}
+                     "scale": 1}
 
         if self.state == CoronavirusAgentState.INFECTED:
             portrayal["Shape"] = "covid_agent_simulation/resources/sick.png"
@@ -31,7 +31,7 @@ class CoronavirusAgent(Agent):
             portrayal["Shape"] = "covid_agent_simulation/resources/recovered.png"
         else:
             portrayal["Shape"] = "covid_agent_simulation/resources/mario.png"
-            portrayal['scale'] = 3.0
+            portrayal['scale'] = 1
         return portrayal
 
     def move(self):
