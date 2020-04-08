@@ -7,6 +7,19 @@ import numpy as np
 from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
 
 
+
+class BoundaryPatch(Agent):
+    def __init__(self, unique_id, pos, model):
+        '''
+        Creates a new patch of boundary
+
+        '''
+        super().__init__(unique_id, model)
+
+    def step(self):
+        return
+
+
 class CoronavirusModel(Model):
     def __init__(self, num_agents=10, width=10, height=10):
         self.num_agents = num_agents
@@ -32,9 +45,9 @@ class CoronavirusModel(Model):
         return unique_id
 
     def setup_agents(self):
-
+      
         choices = [CoronavirusAgentState.HEALTHY, CoronavirusAgentState.INFECTED]
-
+        
         home_coors = []
         for info in self.grid.coord_iter():
             contents = info[0]
@@ -80,7 +93,6 @@ class CoronavirusModel(Model):
     def run_model(self, n):
         for i in range(n):
             self.step()
-
 
 def all_infected(model):
     return get_all_in_state(model, CoronavirusAgentState.INFECTED)
