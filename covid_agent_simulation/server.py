@@ -1,7 +1,6 @@
 
-from mesa.visualization.ModularVisualization import ModularServer
-from .model import CoronavirusModel, CoronavirusAgentState
-from .agents import CoronavirusAgent, InteriorAgent
+from mesa.visualization.ModularVisualization import ModularServer, VisualizationElement
+from .model import CoronavirusModel
 
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
@@ -23,9 +22,9 @@ num_cells_row = 50
 num_cells_column = 50
 grid = CanvasGrid(agent_portrayal, num_cells_row, num_cells_column, 700, 700)
 
-
-back = BackgroundSetter("https://www.tooploox.com/cdn/academic-program.png-24378a904f32a566ccf799a2dc4bdf8928d75bbe.png")
-grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
+# Uncomment to use remote image as a background
+# "back" object must be also included in the ModularServer parameters.
+# back = BackgroundSetter("https://www.tooploox.com/cdn/academic-program.png-24378a904f32a566ccf799a2dc4bdf8928d75bbe.png")
 
 chart = ChartModule([
     {"Label": "Infected", "Color": "#FF0000"}, 
@@ -42,5 +41,5 @@ model_params = {
     "height": num_cells_row
 }
 
-server = ModularServer(CoronavirusModel, [grid, chart, back], "Coronavirus Model", model_params)
+server = ModularServer(CoronavirusModel, [grid, chart], "Coronavirus Model", model_params)
 server.port = 8521
