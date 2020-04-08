@@ -19,18 +19,21 @@ class CoronavirusAgent(Agent):
         self.home_id = home_id
 
     def get_portrayal(self):
-        portrayal = {"Shape": "circle",
-                     "Filled": "true",
-                     "Layer": 1,
-                     "r": 0.5}
+        portrayal = {
+                     # "Shape": "circle",
+                     # "Filled": "true",
+                     "Layer": 2,
+                     # "r": 0.5,
+                     "scale": 2.5}
 
         if self.state == CoronavirusAgentState.INFECTED:
-            portrayal["Color"] = "red"
-        elif self.state == CoronavirusAgentState.RECOVERED:
-            portrayal["Color"] = "grey"
-        else:
-            portrayal["Color"] = "green"
+            portrayal["Shape"] = "covid_agent_simulation/resources/sick.png"
 
+        elif self.state == CoronavirusAgentState.RECOVERED:
+            portrayal["Shape"] = "covid_agent_simulation/resources/recovered.png"
+        else:
+            portrayal["Shape"] = "covid_agent_simulation/resources/mario.png"
+            portrayal['scale'] = 3.0
         return portrayal
 
     def move(self):
@@ -59,19 +62,25 @@ class CoronavirusAgent(Agent):
                 self.infect()
 
 
+
 class InteriorAgent(Agent):
-    def __init__(self, unique_id, model, color="yellow"):
+    def __init__(self, unique_id, model, color="yellow", shape=None):
         super().__init__(unique_id, model)
         self.color = color
+        if shape is not None:
+            self.shape = shape
+        else:
+            self.shape = "rect"
 
     def step(self):
         pass
 
     def get_portrayal(self):
-        portrayal = {"Shape": "rect",
-                     "Filled": "true",
-                     "Color": self.color,
+        portrayal = {"Shape": self.shape,
+                     # "Filled": "true",
+                     # "Color": self.color,
                      "Layer": 0,
-                     "w": 1,
-                     "h": 1}
+                     # "w": 1,
+                     # "h": 1
+                     }
         return portrayal
