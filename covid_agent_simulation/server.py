@@ -1,5 +1,7 @@
-from mesa.visualization.ModularVisualization import ModularServer, VisualizationElement
-from .model import CoronavirusModel, CoronavirusAgentState, BoundaryPatch, CoronavirusAgent
+
+from mesa.visualization.ModularVisualization import ModularServer
+from .model import CoronavirusModel, CoronavirusAgentState
+from .agents import CoronavirusAgent, InteriorAgent
 
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
@@ -13,36 +15,13 @@ class BackgroundSetter(VisualizationElement):
 
 
 def agent_portrayal(agent):
-    portrayal = {"Shape": "circle",
-                 "Filled": "true",
-                 "r": 0.5}
+
+    return agent.get_portrayal()
 
 
-def agent_portrayal(agent):
-    if type(agent) is CoronavirusAgent:
-        portrayal = {"Shape": "circle",
-                     "Filled": "true",
-                     "r": 0.5}
-        if agent.state == CoronavirusAgentState.INFECTED:
-            portrayal["Color"] = "red"
-            portrayal["Layer"] = 0
-        elif agent.state == CoronavirusAgentState.RECOVERED:
-            portrayal["Color"] = "grey"
-            portrayal["Layer"] = 2
-            portrayal['r'] = 0.15
-        else:
-            portrayal["Color"] = "green"
-            portrayal["Layer"] = 1
-            portrayal['r'] = 0.25
-    elif type(agent) is BoundaryPatch:
-        portrayal = {}
-        portrayal["Color"] = "grey"
-        portrayal["Shape"] = "rect"
-        portrayal["Filled"] = "true"
-        portrayal["Layer"] = 0
-        portrayal["w"] = 1
-        portrayal["h"] = 1
-    return portrayal
+num_cells_row = 50
+num_cells_column = 50
+grid = CanvasGrid(agent_portrayal, num_cells_row, num_cells_column, 700, 700)
 
 
 back = BackgroundSetter("https://www.tooploox.com/cdn/academic-program.png-24378a904f32a566ccf799a2dc4bdf8928d75bbe.png")
@@ -56,10 +35,11 @@ chart = ChartModule([
 )
 
 model_params = {
-    "N": UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
-                               description="Choose how many agents to include in the model"),
-    "width": 10,
-    "height": 10
+    "num_agents":
+        UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
+                              description="Choose how many agents to include in the model"),
+    "width": num_cells_column,
+    "height": num_cells_row
 }
 
 server = ModularServer(CoronavirusModel, [grid, chart, back], "Coronavirus Model", model_params)
