@@ -1,5 +1,6 @@
+
 from mesa.visualization.ModularVisualization import ModularServer, VisualizationElement
-from .model import CoronavirusModel, CoronavirusAgentState
+from .model import CoronavirusModel
 
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
@@ -13,25 +14,17 @@ class BackgroundSetter(VisualizationElement):
 
 
 def agent_portrayal(agent):
-    portrayal = {"Shape": "circle",
-                 "Filled": "true",
-                 "r": 0.5}
-
-    if agent.state == CoronavirusAgentState.INFECTED:
-        portrayal["Color"] = "red"
-        portrayal["Layer"] = 0
-    elif agent.state == CoronavirusAgentState.RECOVERED:
-        portrayal["Color"] = "grey"
-        portrayal["Layer"] = 2
-    else:
-        portrayal["Color"] = "green"
-        portrayal["Layer"] = 1
-
-    return portrayal
+    return agent.get_portrayal()
 
 
-back = BackgroundSetter("https://www.tooploox.com/cdn/academic-program.png-24378a904f32a566ccf799a2dc4bdf8928d75bbe.png")
-grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
+num_cells_row = 50
+num_cells_column = 50
+grid = CanvasGrid(agent_portrayal, num_cells_row, num_cells_column, 700, 700)
+
+# Uncomment to use remote image as a background
+# "back" object must be also included in the ModularServer parameters.
+# back = BackgroundSetter("https://www.tooploox.com/cdn/academic-program.png-24378a904f32a566ccf799a2dc4bdf8928d75bbe.png")
+
 chart = ChartModule([
     {"Label": "Infected", "Color": "#FF0000"}, 
     {"Label": "Healthy", "Color": "#00FF00"},
@@ -40,11 +33,12 @@ chart = ChartModule([
 )
 
 model_params = {
-    "N": UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
-                               description="Choose how many agents to include in the model"),
-    "width": 10,
-    "height": 10
+    "num_agents":
+        UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
+                              description="Choose how many agents to include in the model"),
+    "width": num_cells_column,
+    "height": num_cells_row
 }
 
-server = ModularServer(CoronavirusModel, [grid, chart, back], "Coronavirus Model", model_params)
+server = ModularServer(CoronavirusModel, [grid, chart], "Coronavirus Model", model_params)
 server.port = 8521
