@@ -51,6 +51,7 @@ class CoronavirusModel(Model):
             ind = np.random.randint(0, len(home_coors), 1)[0]
             x, y = home_coors[ind]
             self.grid.place_agent(a, (x, y))
+            a.set_home_address((x,y))
 
     def setup_interior(self, row, column, id, interior_type, color="yellow", shape=None):
             interior = InteriorAgent(id, self, color, shape, interior_type)
@@ -65,6 +66,9 @@ class CoronavirusModel(Model):
                     self.setup_interior(r, c, grid_map[r, c], InteriorType.OUTSIDE, color="white")
                 else:
                     self.setup_interior(r, c, grid_map[r, c], InteriorType.INSIDE)
+
+    def setup_common_area_entrance(self, grid_map):
+        pass
 
     def step(self):
         self.schedule.step()

@@ -9,6 +9,7 @@ class InteriorType(Enum):
     INSIDE = 1
     OUTSIDE = 2
 
+
 class CoronavirusAgentState(Enum):
     HEALTHY = 1
     INFECTED = 2
@@ -17,12 +18,14 @@ class CoronavirusAgentState(Enum):
 
 class CoronavirusAgent(Agent):
 
-    def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1, home_id=None):
+    def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1, max_being_out_steps = 10, home_id=None):
         super().__init__(unique_id, model)
         self.state = state
         self.infected_steps = 0
+        self.outside_steps = 0
         self.max_infection_steps = max_infection_steps
-        self.home_id = home_id
+        self.max_being_out_steps = max_being_out_steps
+        # self.home_id = home_id
         self.going_out_prob = going_out_prob
 
     def get_portrayal(self):
@@ -39,6 +42,9 @@ class CoronavirusAgent(Agent):
             portrayal["Color"] = "green"
         return portrayal
 
+    def set_home_address(self, cell):
+        self.home_cell = cell
+
     def move(self):
         possible_steps = self.model.grid.get_neighborhood(
             self.pos, moore=True, include_center=False
@@ -48,10 +54,14 @@ class CoronavirusAgent(Agent):
         if len(valid_steps) > 0:
             self.model.grid.move_agent(self, self.random.choice(valid_steps))
 
-    def go_out(self, entrance_cell=(10,20)):
+    def go_out(self, entrance_cell=(0,0)):
         entrance_area = [(entrance_cell[0]+a, entrance_cell[1]+ b) for a, b in zip([0, 1, 2, 3], [0, 1, 2, 3])]
         teleport_to_cell = random.choice(entrance_area)
         self.model.grid.move_agent(self, teleport_to_cell)
+
+    def return_home(self):
+        self.model.grid.move_agent(self, self.home_cell)
+        self.outside_steps = 0
 
     def infect(self):
         neighbors = self.model.grid.get_neighbors(self.pos, True, False,
@@ -64,6 +74,7 @@ class CoronavirusAgent(Agent):
 
     def step(self):
         if self.__location(self.pos) == InteriorType.INSIDE:
+            # agent is at home and might go out
             movement_choice = random.choices(
                 [0, 1],
                 [1-self.going_out_prob, self.going_out_prob],
@@ -74,7 +85,13 @@ class CoronavirusAgent(Agent):
             else:
                 self.move()
         else:
-            self.move()
+            # agent location is outside
+            if self.outside_steps > self.max_being_out_steps:
+                self.return_home()
+            else:
+                self.move()
+                self.outside_steps += 1
+
         if self.state == CoronavirusAgentState.INFECTED:
             if self.infected_steps >= self.max_infection_steps:
                 self.state = CoronavirusAgentState.RECOVERED
