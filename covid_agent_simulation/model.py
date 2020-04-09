@@ -69,11 +69,9 @@ class CoronavirusModel(Model):
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
                 if grid_map[r, c] == 0:
-                    self.setup_interior(r, c, grid_map[r, c], InteriorType.PARK,
-                                        shape="covid_agent_simulation/resources/grass.png")
+                    self.setup_interior(r, c, grid_map[r, c], InteriorType.PARK, color="white")
                 else:
-                    self.setup_interior(r, c, grid_map[r, c], InteriorType.HOME,
-                                        shape="covid_agent_simulation/resources/wall.png")
+                    self.setup_interior(r, c, grid_map[r, c], InteriorType.HOME)
 
     def step(self):
         self.schedule.step()
