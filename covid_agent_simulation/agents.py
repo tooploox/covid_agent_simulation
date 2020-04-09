@@ -11,28 +11,45 @@ class CoronavirusAgentState(Enum):
     RECOVERED = 3
 
 
+class InteriorType(Enum):
+    HOME = 1
+    STORE = 2
+    PARK = 3
+    FOREST = 4
+
+
 class CoronavirusAgent(Agent):
 
-    def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1, home_id=None):
+    def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1,
+                 home_id=None, config=None):
         super().__init__(unique_id, model)
         self.state = state
         self.infected_steps = 0
         self.max_infection_steps = max_infection_steps
         self.home_id = home_id
         self.going_out_prob = going_out_prob
+        self.config = config
 
     def get_portrayal(self):
         portrayal = {
-                     "Layer": 2
+            "Layer": 1,
+            "w": 0.5,
+            "h": 0.5,
+            "r": 0.5,
+            "Filled": "true"
         }
 
         if self.state == CoronavirusAgentState.INFECTED:
-            portrayal["Shape"] = "covid_agent_simulation/resources/sick.png"
+            portrayal["Shape"] = self.config["agent"]["infected"]["shape"]
+            portrayal["Color"] = self.config["agent"]["infected"]["color"]
 
         elif self.state == CoronavirusAgentState.RECOVERED:
-            portrayal["Shape"] = "covid_agent_simulation/resources/recovered.png"
+            portrayal["Shape"] = self.config["agent"]["recovered"]["shape"]
+            portrayal["Color"] = self.config["agent"]["recovered"]["color"]
         else:
-            portrayal["Shape"] = "covid_agent_simulation/resources/mario.png"
+            portrayal["Shape"] = self.config["agent"]["healthy"]["shape"]
+            portrayal["Color"] = self.config["agent"]["healthy"]["color"]
+
         return portrayal
 
     def move(self):
@@ -55,11 +72,12 @@ class CoronavirusAgent(Agent):
         for n in neighbors:
             if type(n) == CoronavirusAgent and \
                     n.state == CoronavirusAgentState.HEALTHY and \
-                    self.random.uniform(0, 1) < self.model.infection_probabilities[moore_distance(self.pos, n.pos) - 1]:
+                    self.random.uniform(0, 1) <\
+                    self.model.infection_probabilities[moore_distance(self.pos, n.pos) - 1]:
                 n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
-        if self.__location(self.pos) == 'home':
+        if self.__location(self.pos) == InteriorType.HOME:
             movement_choice = random.choices(
                 [0, 1],
                 [1-self.going_out_prob, self.going_out_prob],
@@ -109,6 +127,8 @@ class InteriorAgent(Agent):
 
     def get_portrayal(self):
         portrayal = {"Shape": self.shape,
+                     "Filled": "true",
+                     "Color": self.color,
                      "Layer": 0,
                      "w": 1,
                      "h": 1}
