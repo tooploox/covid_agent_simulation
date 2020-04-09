@@ -1,5 +1,6 @@
 from enum import Enum
 import math
+import random
 
 from mesa import Agent
 
@@ -12,17 +13,18 @@ class CoronavirusAgentState(Enum):
 
 class CoronavirusAgent(Agent):
 
-    def __init__(self, unique_id, model, state, max_infection_steps=14, home_id=None):
+    def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1, home_id=None):
         super().__init__(unique_id, model)
         self.state = state
         self.infected_steps = 0
         self.max_infection_steps = max_infection_steps
         self.home_id = home_id
+        self.going_out_prob = going_out_prob
 
     def get_portrayal(self):
         portrayal = {
-                     "Layer": 2,
-                     "scale": 1}
+                     "Layer": 2
+        }
 
         if self.state == CoronavirusAgentState.INFECTED:
             portrayal["Shape"] = "covid_agent_simulation/resources/sick.png"
@@ -31,7 +33,6 @@ class CoronavirusAgent(Agent):
             portrayal["Shape"] = "covid_agent_simulation/resources/recovered.png"
         else:
             portrayal["Shape"] = "covid_agent_simulation/resources/mario.png"
-            portrayal['scale'] = 1
         return portrayal
 
     def move(self):
@@ -43,6 +44,11 @@ class CoronavirusAgent(Agent):
         if len(valid_steps) > 0:
             self.model.grid.move_agent(self, self.random.choice(valid_steps))
 
+    def go_out(self, entrance_cell=(10,20)):
+        entrance_area = [(entrance_cell[0]+a, entrance_cell[1]+ b) for a, b in zip([0, 1, 2, 3], [0, 1, 2, 3])]
+        teleport_to_cell = random.choice(entrance_area)
+        self.model.grid.move_agent(self, teleport_to_cell)
+
     def infect(self):
         neighbors = self.model.grid.get_neighbors(self.pos, True, False,
                                                   len(self.model.infection_probabilities))
@@ -53,7 +59,18 @@ class CoronavirusAgent(Agent):
                 n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
-        self.move()
+        if self.__location(self.pos) == 'home':
+            movement_choice = random.choices(
+                [0, 1],
+                [1-self.going_out_prob, self.going_out_prob],
+                k=1
+            )
+            if movement_choice == [1]:
+                self.go_out()
+            else:
+                self.move()
+        else:
+            self.move()
         if self.state == CoronavirusAgentState.INFECTED:
             if self.infected_steps >= self.max_infection_steps:
                 self.state = CoronavirusAgentState.RECOVERED
@@ -68,11 +85,20 @@ class CoronavirusAgent(Agent):
                 return True
         return False
 
+    def __location(self, pos):
+        this_cell = self.model.grid.get_cell_list_contents([pos])
+        interior_agent = [el for el in this_cell if type(el) == InteriorAgent]
+        if len(interior_agent) == 0:
+            return 'outside'
+        else:
+            return interior_agent[0].interior_type
+
 
 class InteriorAgent(Agent):
-    def __init__(self, unique_id, model, color="yellow", shape=None):
+    def __init__(self, unique_id, model, color="yellow", shape=None, interior_type=None):
         super().__init__(unique_id, model)
         self.color = color
+        self.interior_type = interior_type
         if shape is not None:
             self.shape = shape
         else:

@@ -1,3 +1,5 @@
+from enum import Enum
+
 from mesa import Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
@@ -5,6 +7,13 @@ from mesa.datacollection import DataCollector
 import numpy as np
 
 from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
+
+
+class InteriorType(Enum):
+    HOME = 1
+    STORE = 2
+    PARK = 3
+    FOREST = 4
 
 
 class CoronavirusModel(Model):
@@ -39,7 +48,7 @@ class CoronavirusModel(Model):
             contents = info[0]
             coors = info[1:]
             for object in contents:
-                if object.color == "yellow":
+                if object.interior_type == InteriorType.HOME:
                     home_coors.append(coors)
 
         for i in range(self.num_agents):
@@ -50,8 +59,8 @@ class CoronavirusModel(Model):
             x, y = home_coors[ind]
             self.grid.place_agent(a, (x, y))
 
-    def setup_interior(self, row, column, id, color="yellow", shape=None):
-            interior = InteriorAgent(id, self, color, shape)
+    def setup_interior(self, row, column, id, interior_type, color="yellow", shape=None):
+            interior = InteriorAgent(id, self, color, shape, interior_type)
             # origin of grid here is at left bottom, not like in opencv left top, so we need to flip y axis
             row = self.grid.height - row - 1
             self.grid.place_agent(interior, (column, row))
@@ -59,8 +68,12 @@ class CoronavirusModel(Model):
     def setup_interiors(self, grid_map):
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
-                if grid_map[r, c] != 0:
-                    self.setup_interior(r, c, grid_map[r, c], shape="covid_agent_simulation/resources/wall.png")
+                if grid_map[r, c] == 0:
+                    self.setup_interior(r, c, grid_map[r, c], InteriorType.PARK,
+                                        shape="covid_agent_simulation/resources/grass.png")
+                else:
+                    self.setup_interior(r, c, grid_map[r, c], InteriorType.HOME,
+                                        shape="covid_agent_simulation/resources/wall.png")
 
     def step(self):
         self.schedule.step()
