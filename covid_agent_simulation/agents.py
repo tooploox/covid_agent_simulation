@@ -69,7 +69,6 @@ class CoronavirusAgent(Agent):
         return False
 
 
-
 class InteriorAgent(Agent):
     def __init__(self, unique_id, model, color="yellow", shape=None):
         super().__init__(unique_id, model)

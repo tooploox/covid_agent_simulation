@@ -18,15 +18,8 @@ def agent_portrayal(agent):
     return agent.get_portrayal()
 
 
-map = np.load('map.npy')
-if map is None:
-    num_cells_row = 50
-    num_cells_column = 50
-else:
-    num_cells_row = map.shape[0]
-    num_cells_column = map.shape[1]
-
-grid = CanvasGrid(agent_portrayal, num_cells_row, num_cells_column, 700, 700)
+grid_map = np.load('map.npy')
+grid = CanvasGrid(agent_portrayal, grid_map.shape[0], grid_map.shape[1], 700, 700)
 
 # Uncomment to use remote image as a background
 # "back" object must be also included in the ModularServer parameters.
@@ -43,9 +36,7 @@ model_params = {
     "num_agents":
         UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
                               description="Choose how many agents to include in the model"),
-    "width": num_cells_column,
-    "height": num_cells_row,
-    "map": map
+    "grid_map": grid_map
 }
 
 server = ModularServer(CoronavirusModel, [grid, chart], "Coronavirus Model", model_params)
