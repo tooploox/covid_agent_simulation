@@ -54,7 +54,8 @@ class CoronavirusAgent(Agent):
         if len(valid_steps) > 0:
             self.model.grid.move_agent(self, self.random.choice(valid_steps))
 
-    def go_out(self, entrance_cell=(0,0)):
+    def go_out(self):
+        entrance_cell = self.model.common_area_entrance
         entrance_area = [(entrance_cell[0]+a, entrance_cell[1]+ b) for a, b in zip([0, 1, 2, 3], [0, 1, 2, 3])]
         teleport_to_cell = random.choice(entrance_area)
         self.model.grid.move_agent(self, teleport_to_cell)

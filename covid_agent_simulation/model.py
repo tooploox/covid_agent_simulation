@@ -23,6 +23,7 @@ class CoronavirusModel(Model):
         self.infection_probabilities = infection_probabilities
         self.setup_interiors(grid_map)
         self.setup_agents()
+        self.setup_common_area_entrance()
 
         self.running = True
         self.datacollector.collect(self)
@@ -67,8 +68,8 @@ class CoronavirusModel(Model):
                 else:
                     self.setup_interior(r, c, grid_map[r, c], InteriorType.INSIDE)
 
-    def setup_common_area_entrance(self, grid_map):
-        pass
+    def setup_common_area_entrance(self, entrance_cell=(0,0)):
+        self.common_area_entrance = entrance_cell
 
     def step(self):
         self.schedule.step()
