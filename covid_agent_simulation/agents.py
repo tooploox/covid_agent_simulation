@@ -22,17 +22,17 @@ class CoronavirusAgent(Agent):
         self.going_out_prob = going_out_prob
 
     def get_portrayal(self):
-        portrayal = {
-                     "Layer": 2
-        }
+        portrayal = {"Layer": 1,
+                     "Shape": "circle",
+                     "Filled": "true",
+                     "r": 0.5}
 
         if self.state == CoronavirusAgentState.INFECTED:
-            portrayal["Shape"] = "covid_agent_simulation/resources/sick.png"
-
+            portrayal["Color"] = "red"
         elif self.state == CoronavirusAgentState.RECOVERED:
-            portrayal["Shape"] = "covid_agent_simulation/resources/recovered.png"
+            portrayal["Color"] = "grey"
         else:
-            portrayal["Shape"] = "covid_agent_simulation/resources/mario.png"
+            portrayal["Color"] = "green"
         return portrayal
 
     def move(self):
@@ -111,7 +111,9 @@ class InteriorAgent(Agent):
         portrayal = {"Shape": self.shape,
                      "Layer": 0,
                      "w": 1,
-                     "h": 1}
+                     "h": 1,
+                     "Color": self.color,
+                     "Filled": "true"}
         return portrayal
 
 
