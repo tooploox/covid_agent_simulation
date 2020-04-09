@@ -1,10 +1,9 @@
 from enum import Enum
 
-from mesa import Agent, Model
+from mesa import Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
-import math
 import numpy as np
 
 from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
@@ -17,22 +16,10 @@ class InteriorType(Enum):
     FOREST = 4
 
 
-class BoundaryPatch(Agent):
-    def __init__(self, unique_id, pos, model):
-        '''
-        Creates a new patch of boundary
-
-        '''
-        super().__init__(unique_id, model)
-
-    def step(self):
-        return
-
-
 class CoronavirusModel(Model):
-    def __init__(self, num_agents=10, width=10, height=10, infection_probabilities=[0.7, 0.4]):
+    def __init__(self, grid_map, num_agents=10, infection_probabilities=[0.7, 0.4]):
         self.num_agents = num_agents
-        self.grid = MultiGrid(height, width, False)
+        self.grid = MultiGrid(grid_map.shape[0], grid_map.shape[1], False)
         self.schedule = RandomActivation(self)
         self.datacollector = DataCollector(
             model_reporters={"Infected": all_infected,
@@ -41,7 +28,7 @@ class CoronavirusModel(Model):
         )
         self.global_max_index = 0
         self.infection_probabilities = infection_probabilities
-        self.setup_interiors()
+        self.setup_interiors(grid_map)
         self.setup_agents()
 
         self.running = True
@@ -72,33 +59,21 @@ class CoronavirusModel(Model):
             x, y = home_coors[ind]
             self.grid.place_agent(a, (x, y))
 
-    def setup_interior(self, init_row, init_column, width=3, height=4,
-                       color="yellow", shape=None, interior_type=None):
-        for x in range(init_column, init_column + width):
-            for y in range(init_row, init_row + height):
-                interior = InteriorAgent(self.get_unique_id(), self, color, shape, interior_type)
-                self.grid.place_agent(interior, (x, y))
+    def setup_interior(self, row, column, id, interior_type, color="yellow", shape=None):
+            interior = InteriorAgent(id, self, color, shape, interior_type)
+            # origin of grid here is at left bottom, not like in opencv left top, so we need to flip y axis
+            row = self.grid.height - row - 1
+            self.grid.place_agent(interior, (column, row))
 
-    def setup_interiors(self):
-        homes_coor = [
-            (0, 0),
-            (0, 10),
-            (0, 30),
-            (5, 10),
-            (10, 20)
-        ]
-
-        object_coor = (20, 10)
-        for coor in homes_coor:
-            self.setup_interior(coor[0], coor[1],
-                                shape="covid_agent_simulation/resources/wall.png",
-                                interior_type=InteriorType.HOME
-                                )
-
-        self.setup_interior(object_coor[0], object_coor[1],
-                            width=20, height=10,
-                            shape="covid_agent_simulation/resources/grass.png",
-                            interior_type=InteriorType.PARK)
+    def setup_interiors(self, grid_map):
+        for r in range(grid_map.shape[0]):
+            for c in range(grid_map.shape[1]):
+                if grid_map[r, c] == 0:
+                    self.setup_interior(r, c, grid_map[r, c], InteriorType.PARK,
+                                        shape="covid_agent_simulation/resources/grass.png")
+                else:
+                    self.setup_interior(r, c, grid_map[r, c], InteriorType.HOME,
+                                        shape="covid_agent_simulation/resources/wall.png")
 
     def step(self):
         self.schedule.step()

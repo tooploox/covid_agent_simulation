@@ -23,18 +23,16 @@ class CoronavirusAgent(Agent):
 
     def get_portrayal(self):
         portrayal = {
-                     "Layer": 2}
+                     "Layer": 2
+        }
 
         if self.state == CoronavirusAgentState.INFECTED:
             portrayal["Shape"] = "covid_agent_simulation/resources/sick.png"
-            portrayal['scale'] = 2.5
 
         elif self.state == CoronavirusAgentState.RECOVERED:
             portrayal["Shape"] = "covid_agent_simulation/resources/recovered.png"
-            portrayal['scale'] = 2.0
         else:
             portrayal["Shape"] = "covid_agent_simulation/resources/mario.png"
-            portrayal['scale'] = 3.0
         return portrayal
 
     def move(self):
@@ -47,10 +45,9 @@ class CoronavirusAgent(Agent):
             self.model.grid.move_agent(self, self.random.choice(valid_steps))
 
     def go_out(self, entrance_cell=(10,20)):
-        entrance_area = [(entrance_cell[0]+a, entrance_cell[1]+ b) for a, b in zip([0,1,2,3],[0,1,2,3])]
+        entrance_area = [(entrance_cell[0]+a, entrance_cell[1]+ b) for a, b in zip([0, 1, 2, 3], [0, 1, 2, 3])]
         teleport_to_cell = random.choice(entrance_area)
         self.model.grid.move_agent(self, teleport_to_cell)
-
 
     def infect(self):
         neighbors = self.model.grid.get_neighbors(self.pos, True, False,
@@ -62,10 +59,9 @@ class CoronavirusAgent(Agent):
                 n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
-
         if self.__location(self.pos) == 'home':
             movement_choice = random.choices(
-                [0,1],
+                [0, 1],
                 [1-self.going_out_prob, self.going_out_prob],
                 k=1
             )
@@ -82,7 +78,6 @@ class CoronavirusAgent(Agent):
                 self.infected_steps += 1
                 self.infect()
 
-
     def __is_cell_taken(self, pos):
         agents_in_cell = self.model.grid.get_cell_list_contents(pos)
         for a in agents_in_cell:
@@ -97,7 +92,6 @@ class CoronavirusAgent(Agent):
             return 'outside'
         else:
             return interior_agent[0].interior_type
-
 
 
 class InteriorAgent(Agent):
