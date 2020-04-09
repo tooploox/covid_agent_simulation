@@ -1,13 +1,11 @@
 import cv2
 import numpy as np
 import argparse
+import random
 
-HOUSE_COLORS = [(0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255),
-                (255, 255, 0), (0, 255, 255), (128, 128, 128),
-                (237, 152, 162), (24, 67, 39)]
-
-USAGE = "Use mouse left button to fill cells. To change house, press numbers from" \
-        f"1 to {len(HOUSE_COLORS)}. Use c to clear. Use q to quit and save map"
+USAGE = "Use mouse left button to fill cells. To change id, " \
+        "press n for next and p for previous. " \
+        "Use c to clear. Use q to quit and save map. Common space has id 0"
 
 
 class Map:
@@ -16,9 +14,11 @@ class Map:
 
         self.grid = np.zeros((grid_width, grid_height))
         self.img = np.zeros((grid_width * self.pixels_per_cell,
-                             grid_height * self.pixels_per_cell, 3))
+                             grid_height * self.pixels_per_cell, 3),
+                            dtype=np.uint8)
         self.drawing = False
         self.house_id = 1
+        self.houses_colors = {0: (0, 0, 0), 1: (255, 0, 0)}
 
     def draw_grid(self):
         for r in range(self.img.shape[0]):
@@ -47,11 +47,17 @@ class Map:
             self.grid[yp, xp] = self.house_id
             self.img[yp * self.pixels_per_cell:(yp + 1) * self.pixels_per_cell,
             xp * self.pixels_per_cell:(xp + 1) * self.pixels_per_cell] = \
-                HOUSE_COLORS[self.house_id]
+                self.houses_colors[self.house_id]
         elif event == cv2.EVENT_LBUTTONUP:
             self.drawing = False
 
     def set_id(self, house_id):
+        if house_id not in self.houses_colors:
+            self.houses_colors[house_id] = (random.randint(0, 255),
+                                            random.randint(0, 255),
+                                            random.randint(0, 255))
+
+        print(self.houses_colors)
         self.house_id = house_id
 
     def clear(self):
@@ -60,22 +66,26 @@ class Map:
         self.drawing = False
 
 
-def draw_map(grid_width, grid_height, num_of_houses, save_path):
-    if num_of_houses > len(HOUSE_COLORS):
-        return
-
+def draw_map(grid_width, grid_height, save_path):
     map = Map(grid_width, grid_height)
     cv2.namedWindow('map')
     cv2.setMouseCallback('map', map.fill_cell)
+    house_id = 1
     while True:
         k = cv2.waitKey(1) & 0xFF
 
         map.draw_grid()
         if k == ord('q'):
             break
-        elif ord('0') <= k <= ord(str(num_of_houses)):
-            print('Changing house id to:', chr(k))
-            map.set_id(int(chr(k)))
+        elif k == ord('n'):
+            house_id += 1
+            print('Incrementing id:', house_id)
+            map.set_id(house_id)
+        elif k == ord('p'):
+            if house_id > 0:
+                house_id -= 1
+                print('Decrementing id:', house_id)
+                map.set_id(house_id)
         elif k == ord('c'):
             map.clear()
 
@@ -89,7 +99,6 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--grid_width", default=50)
     parser.add_argument("--grid_height", default=50)
-    parser.add_argument("--houses_number", help=f"Max {len(HOUSE_COLORS)}", default=5)
     parser.add_argument("--save_path", default="map.npy")
     return parser.parse_args()
 
@@ -97,4 +106,4 @@ def parse_arguments():
 if __name__ == '__main__':
     print(USAGE)
     args = parse_arguments()
-    draw_map(args.grid_width, args.grid_height, args.houses_number, args.save_path)
+    draw_map(args.grid_width, args.grid_height, args.save_path)
