@@ -1,3 +1,5 @@
+from enum import Enum
+
 from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
@@ -7,6 +9,12 @@ import numpy as np
 
 from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
 
+
+class InteriorType(Enum):
+    HOME = 1
+    STORE = 2
+    PARK = 3
+    FOREST = 4
 
 
 class BoundaryPatch(Agent):
@@ -53,7 +61,7 @@ class CoronavirusModel(Model):
             contents = info[0]
             coors = info[1:]
             for object in contents:
-                if object.color == "yellow":
+                if object.interior_type == InteriorType.HOME:
                     home_coors.append(coors)
 
         for i in range(self.num_agents):
@@ -84,13 +92,13 @@ class CoronavirusModel(Model):
         for coor in homes_coor:
             self.setup_interior(coor[0], coor[1],
                                 shape="covid_agent_simulation/resources/wall.png",
-                                interior_type='home'
+                                interior_type=InteriorType.HOME
                                 )
 
         self.setup_interior(object_coor[0], object_coor[1],
                             width=20, height=10,
                             shape="covid_agent_simulation/resources/grass.png",
-                            interior_type='park')
+                            interior_type=InteriorType.PARK)
 
     def step(self):
         self.schedule.step()
