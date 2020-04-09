@@ -6,12 +6,7 @@ from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
 import numpy as np
 
-from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
-
-
-class InteriorType(Enum):
-    INSIDE = 1
-    OUTSIDE = 2
+from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState, InteriorType
 
 
 class CoronavirusModel(Model):

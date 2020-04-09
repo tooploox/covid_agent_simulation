@@ -5,6 +5,10 @@ import random
 from mesa import Agent
 
 
+class InteriorType(Enum):
+    INSIDE = 1
+    OUTSIDE = 2
+
 class CoronavirusAgentState(Enum):
     HEALTHY = 1
     INFECTED = 2
@@ -59,7 +63,7 @@ class CoronavirusAgent(Agent):
                 n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
-        if self.__location(self.pos) == 'home':
+        if self.__location(self.pos) == InteriorType.INSIDE:
             movement_choice = random.choices(
                 [0, 1],
                 [1-self.going_out_prob, self.going_out_prob],
@@ -88,10 +92,7 @@ class CoronavirusAgent(Agent):
     def __location(self, pos):
         this_cell = self.model.grid.get_cell_list_contents([pos])
         interior_agent = [el for el in this_cell if type(el) == InteriorAgent]
-        if len(interior_agent) == 0:
-            return 'outside'
-        else:
-            return interior_agent[0].interior_type
+        return interior_agent[0].interior_type
 
 
 class InteriorAgent(Agent):
