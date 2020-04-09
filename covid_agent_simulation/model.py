@@ -10,10 +10,8 @@ from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState
 
 
 class InteriorType(Enum):
-    HOME = 1
-    STORE = 2
-    PARK = 3
-    FOREST = 4
+    INSIDE = 1
+    OUTSIDE = 2
 
 
 class CoronavirusModel(Model):
@@ -48,7 +46,7 @@ class CoronavirusModel(Model):
             contents = info[0]
             coors = info[1:]
             for object in contents:
-                if object.interior_type == InteriorType.HOME:
+                if object.interior_type == InteriorType.INSIDE:
                     home_coors.append(coors)
 
         for i in range(self.num_agents):
@@ -69,9 +67,9 @@ class CoronavirusModel(Model):
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
                 if grid_map[r, c] == 0:
-                    self.setup_interior(r, c, grid_map[r, c], InteriorType.PARK, color="white")
+                    self.setup_interior(r, c, grid_map[r, c], InteriorType.OUTSIDE, color="white")
                 else:
-                    self.setup_interior(r, c, grid_map[r, c], InteriorType.HOME)
+                    self.setup_interior(r, c, grid_map[r, c], InteriorType.INSIDE)
 
     def step(self):
         self.schedule.step()
