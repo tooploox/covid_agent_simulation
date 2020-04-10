@@ -2,7 +2,6 @@ from mesa.visualization.ModularVisualization import ModularServer, Visualization
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
 from mesa.visualization.UserParam import UserSettableParameter
-import numpy as np
 
 from .model import CoronavirusModel
 from .utils import get_config
@@ -18,9 +17,10 @@ def agent_portrayal(agent):
     return agent.get_portrayal()
 
 config = get_config('./covid_agent_simulation/configs/simple_shapes.yml')
-
-grid_map = np.load('map.npy')
-grid = CanvasGrid(agent_portrayal, grid_map.shape[0], grid_map.shape[1], 700, 700)
+grid = CanvasGrid(agent_portrayal, config['common']['grid']['n_cols'],
+                  config['common']['grid']['n_rows'],
+                  config['common']['grid']['px_cols'],
+                  config['common']['grid']['px_rows'])
 
 # Uncomment to use remote image as a background
 # "back" object must be also included in the ModularServer parameters.
@@ -37,7 +37,12 @@ model_params = {
     "num_agents":
         UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
                               description="Choose how many agents to include in the model"),
-    "grid_map": grid_map,
+    "going_out_prob_mean":
+        UserSettableParameter('slider', "Average probability of leaving home", 0.5, 0, 1, 0.1,
+                               description="Choose how probably, in general, will be going out"),
+
+    "scenario": UserSettableParameter('choice', 'Scenario', value='park',
+                                      choices=['store', 'park', 'forest']),
     "config": config
 }
 

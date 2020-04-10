@@ -1,3 +1,32 @@
+common:
+  random_seed: 42
+  grid:
+    n_rows: 50 # It must be adjusted to the final map
+    n_cols: 50 # It must be adjusted to the final map
+    px_rows: 500
+    px_cols: 700
+  initially_infected_population: 0.01
+  infection_probabilities:
+    - 0.1
+    - 0.02
+
+environment:
+  store:
+    map_path: 'map.npy'
+    entrance_cells:
+      - [10, 10]
+      - [10, 10]
+  park:
+    map_path: 'map.npy'
+    entrance_cells:
+      - [10, 10]
+      - [10, 10]
+  forest:
+    map_path: 'map.npy'
+    entrance_cells:
+      - [10, 10]
+      - [10, 10]
+
 agent:
     infected:
       shape: "circle"
