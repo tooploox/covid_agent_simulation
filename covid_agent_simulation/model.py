@@ -1,10 +1,9 @@
-from enum import Enum
-
 from mesa import Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
 import numpy as np
+import random
 
 from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState, InteriorType
 
@@ -20,10 +19,11 @@ class CoronavirusModel(Model):
                              "Recovered": all_recovered}
         )
         self.global_max_index = 0
+        self.house_colors = {}
         self.infection_probabilities = infection_probabilities
         self.setup_interiors(grid_map)
         self.setup_agents()
-        self.setup_common_area_entrance()
+        self.setup_common_area_entrance((10, 10))
 
         self.running = True
         self.datacollector.collect(self)
@@ -45,31 +45,51 @@ class CoronavirusModel(Model):
                 if object.interior_type == InteriorType.INSIDE:
                     home_coors.append(coors)
 
-        for i in range(self.num_agents):
-            a = CoronavirusAgent(self.get_unique_id(), self, self.random.choice(choices))
-            self.schedule.add(a)
+        if self.num_agents > len(home_coors):
+            self.num_agents = len(home_coors)
+            print(f'Too many agents, they cannot fit into homes. Creating just: {self.num_agents}')
 
+        for i in range(self.num_agents):
             ind = np.random.randint(0, len(home_coors), 1)[0]
             x, y = home_coors[ind]
-            self.grid.place_agent(a, (x, y))
-            a.set_home_address((x,y))
+            del home_coors[ind]  # make sure agents are not placed in the same cell
 
-    def setup_interior(self, row, column, id, interior_type, color="yellow", shape=None):
-            interior = InteriorAgent(id, self, color, shape, interior_type)
+            home_id = [a.home_id for a in self.grid.get_cell_list_contents((x, y)) if type(a) == InteriorAgent]
+            a = CoronavirusAgent(self.get_unique_id(), self, self.random.choice(choices), home_id=home_id)
+            self.schedule.add(a)
+            self.grid.place_agent(a, (x, y))
+            a.set_home_address((x, y))
+
+    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="yellow", shape=None):
+            interior = InteriorAgent(agent_id, self, color, shape, interior_type, home_id)
             # origin of grid here is at left bottom, not like in opencv left top, so we need to flip y axis
             row = self.grid.height - row - 1
             self.grid.place_agent(interior, (column, row))
 
     def setup_interiors(self, grid_map):
+        self.generate_house_colors(grid_map)
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
                 if grid_map[r, c] == 0:
-                    self.setup_interior(r, c, grid_map[r, c], InteriorType.OUTSIDE, color="white")
+                    self.setup_interior(r, c, self.get_unique_id(), grid_map[r, c], color="white")
                 else:
-                    self.setup_interior(r, c, grid_map[r, c], InteriorType.INSIDE)
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.INSIDE, grid_map[r, c],
+                                        color=self.house_colors[grid_map[r, c]])
 
-    def setup_common_area_entrance(self, entrance_cell=(0,0)):
+    def setup_common_area_entrance(self, entrance_cell=(0, 0)):
         self.common_area_entrance = entrance_cell
+
+    def generate_house_colors(self, grid_map):
+        house_num = int(grid_map.max())
+        for i in range(1, house_num + 1):
+            self.house_colors[i] = "#%06x" % random.randint(0, 0xFFFFFF)
+
+    def get_cell_id(self, pos):
+        agents_in_cell = self.grid.get_cell_list_contents(pos)
+        for a in agents_in_cell:
+            if type(a) == InteriorAgent:
+                return a.home_id
+        raise RuntimeError('Cell without inferior agent found')
 
     def step(self):
         self.schedule.step()

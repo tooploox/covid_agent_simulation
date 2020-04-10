@@ -97,8 +97,8 @@ def draw_map(grid_width, grid_height, save_path):
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--grid_width", default=50)
-    parser.add_argument("--grid_height", default=50)
+    parser.add_argument("--grid_width", default=50, type=int)
+    parser.add_argument("--grid_height", default=50, type=int)
     parser.add_argument("--save_path", default="map.npy")
     return parser.parse_args()
 

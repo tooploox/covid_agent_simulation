@@ -18,14 +18,15 @@ class CoronavirusAgentState(Enum):
 
 class CoronavirusAgent(Agent):
 
-    def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1, max_being_out_steps = 10, home_id=None):
+    def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1, max_being_out_steps=10,
+                 home_id=None):
         super().__init__(unique_id, model)
         self.state = state
         self.infected_steps = 0
         self.outside_steps = 0
         self.max_infection_steps = max_infection_steps
         self.max_being_out_steps = max_being_out_steps
-        # self.home_id = home_id
+        self.home_id = home_id
         self.going_out_prob = going_out_prob
 
     def get_portrayal(self):
@@ -50,7 +51,12 @@ class CoronavirusAgent(Agent):
             self.pos, moore=True, include_center=False
         )
 
-        valid_steps = [p for p in possible_steps if not self.__is_cell_taken(p)]
+        if self.__is_home(self.pos):
+            valid_id = self.home_id
+        else:
+            valid_id = None
+        valid_steps = [p for p in possible_steps if not self.__is_cell_taken(p) and
+                       self.model.get_cell_id(p) == valid_id]
         if len(valid_steps) > 0:
             self.model.grid.move_agent(self, self.random.choice(valid_steps))
 
@@ -107,6 +113,13 @@ class CoronavirusAgent(Agent):
                 return True
         return False
 
+    def __is_home(self, pos):
+        agents_in_cell = self.model.grid.get_cell_list_contents(pos)
+        for a in agents_in_cell:
+            if type(a) == InteriorAgent and a.home_id == self.home_id:
+                return True
+        return False
+
     def __location(self, pos):
         this_cell = self.model.grid.get_cell_list_contents([pos])
         interior_agent = [el for el in this_cell if type(el) == InteriorAgent]
@@ -114,10 +127,11 @@ class CoronavirusAgent(Agent):
 
 
 class InteriorAgent(Agent):
-    def __init__(self, unique_id, model, color="yellow", shape=None, interior_type=None):
+    def __init__(self, unique_id, model, color="yellow", shape=None, interior_type=None, home_id=None):
         super().__init__(unique_id, model)
         self.color = color
         self.interior_type = interior_type
+        self.home_id = home_id
         if shape is not None:
             self.shape = shape
         else:
