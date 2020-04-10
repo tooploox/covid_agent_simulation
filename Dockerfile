@@ -7,6 +7,9 @@ ENV PYTHONUNBUFFERED=1 \
 
 RUN apt-get update && apt-get -y install \
     build-essential \
+    libavformat-dev libavcodec-dev libavdevice-dev \
+    libsm6 libxext6 libxrender-dev \
+    libavutil-dev libswscale-dev libswresample-dev libavfilter-dev \
     pkg-config \
     python3-pip \
     python3-tk \

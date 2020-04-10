@@ -9,7 +9,10 @@ from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState, Inte
 
 
 class CoronavirusModel(Model):
-    def __init__(self, grid_map, num_agents=10, infection_probabilities=[0.7, 0.4]):
+    def __init__(self, grid_map, num_agents=10, infection_probabilities=[0.7, 0.4],
+                 config=None):
+
+        self.config = config
         self.num_agents = num_agents
         self.grid = MultiGrid(grid_map.shape[0], grid_map.shape[1], False)
         self.schedule = RandomActivation(self)
@@ -21,6 +24,7 @@ class CoronavirusModel(Model):
         self.global_max_index = 0
         self.house_colors = {}
         self.infection_probabilities = infection_probabilities
+
         self.setup_interiors(grid_map)
         self.setup_agents()
         self.setup_common_area_entrance((10, 10))
@@ -45,9 +49,11 @@ class CoronavirusModel(Model):
                 if object.interior_type == InteriorType.INSIDE:
                     home_coors.append(coors)
 
+
         if self.num_agents > len(home_coors):
             self.num_agents = len(home_coors)
             print(f'Too many agents, they cannot fit into homes. Creating just: {self.num_agents}')
+
 
         for i in range(self.num_agents):
             ind = np.random.randint(0, len(home_coors), 1)[0]
@@ -55,16 +61,19 @@ class CoronavirusModel(Model):
             del home_coors[ind]  # make sure agents are not placed in the same cell
 
             home_id = [a.home_id for a in self.grid.get_cell_list_contents((x, y)) if type(a) == InteriorAgent]
-            a = CoronavirusAgent(self.get_unique_id(), self, self.random.choice(choices), home_id=home_id)
+            a = CoronavirusAgent(self.get_unique_id(), self, self.random.choice(choices), home_id=home_id,
+                                config=self.config)
             self.schedule.add(a)
             self.grid.place_agent(a, (x, y))
             a.set_home_address((x, y))
 
-    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="yellow", shape=None):
+
+    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="white", shape=None):
             interior = InteriorAgent(agent_id, self, color, shape, interior_type, home_id)
             # origin of grid here is at left bottom, not like in opencv left top, so we need to flip y axis
             row = self.grid.height - row - 1
             self.grid.place_agent(interior, (column, row))
+
 
     def setup_interiors(self, grid_map):
         self.generate_house_colors(grid_map)

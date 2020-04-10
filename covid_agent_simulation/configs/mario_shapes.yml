@@ -1,0 +1,18 @@
+agent:
+  infected:
+    shape: "covid_agent_simulation/resources/sick.png"
+    color: null
+  healthy:
+    shape: "covid_agent_simulation/resources/mario.png"
+    color: null
+  recovered:
+    shape: "covid_agent_simulation/resources/recovered.png"
+    color: null
+
+patch:
+  home:
+    shape: "covid_agent_simulation/resources/wall.png"
+    color: null
+  park:
+    shape: "covid_agent_simulation/resources/grass.png"
+    color: null

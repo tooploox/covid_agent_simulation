@@ -10,7 +10,15 @@ dev:
 		-p $(PORT):$(PORT) \
 		-w '/project' \
 		$(IMAGE_NAME)
-
+dev_gui:
+	docker run --rm -ti \
+		-v $(PWD):/project \
+		-p $(PORT):$(PORT) \
+		--env="DISPLAY" \
+		--env="QT_X11_NO_MITSHM=1" \
+		--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+		-w="/project" \
+		$(IMAGE_NAME)
 lab:
 	docker run --rm -ti  \
 		-p $(PORT):$(PORT) \

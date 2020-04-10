@@ -1,11 +1,11 @@
 from mesa.visualization.ModularVisualization import ModularServer, VisualizationElement
-from .model import CoronavirusModel
-
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.modules import ChartModule
 from mesa.visualization.UserParam import UserSettableParameter
-
 import numpy as np
+
+from .model import CoronavirusModel
+from .utils import get_config
 
 
 class BackgroundSetter(VisualizationElement):
@@ -17,6 +17,7 @@ class BackgroundSetter(VisualizationElement):
 def agent_portrayal(agent):
     return agent.get_portrayal()
 
+config = get_config('./covid_agent_simulation/configs/mario_shapes.yml')
 
 grid_map = np.load('map.npy')
 grid = CanvasGrid(agent_portrayal, grid_map.shape[0], grid_map.shape[1], 700, 700)
@@ -36,8 +37,10 @@ model_params = {
     "num_agents":
         UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
                               description="Choose how many agents to include in the model"),
-    "grid_map": grid_map
+    "grid_map": grid_map,
+    "config": config
 }
+
 
 server = ModularServer(CoronavirusModel, [grid, chart], "Coronavirus Model", model_params)
 server.port = 8521

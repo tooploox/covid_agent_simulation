@@ -1,0 +1,18 @@
+agent:
+    infected:
+      shape: "circle"
+      color: "red"
+    healthy:
+      shape: "circle"
+      color: "green"
+    recovered:
+      shape: "circle"
+      color: "grey"
+
+patch:
+  home:
+    shape: "rect"
+    color: "yellow"
+  park:
+    shape: "rect"
+    color: "green"
