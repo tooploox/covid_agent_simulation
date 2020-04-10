@@ -9,10 +9,13 @@ from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState, Inte
 
 
 class CoronavirusModel(Model):
-    def __init__(self, grid_map, num_agents=10, infection_probabilities=[0.7, 0.4],
-                 config=None):
+    def __init__(self, num_agents=10,
+                 config=None, scenario='park', going_out_prob_mean=0.5):
 
         self.config = config
+        np.random.RandomState(config['common']['random_seed'])
+
+        grid_map = self.load_gridmap(scenario)
         self.num_agents = num_agents
         self.grid = MultiGrid(grid_map.shape[0], grid_map.shape[1], False)
         self.schedule = RandomActivation(self)
@@ -21,16 +24,30 @@ class CoronavirusModel(Model):
                              "Healthy": all_healthy,
                              "Recovered": all_recovered}
         )
+        self.going_out_prob_mean = going_out_prob_mean
         self.global_max_index = 0
         self.house_colors = {}
-        self.infection_probabilities = infection_probabilities
+        self.infection_probabilities = self.config['common']['infection_probabilities']
 
         self.setup_interiors(grid_map)
         self.setup_agents()
-        self.setup_common_area_entrance((10, 10))
+        self.setup_common_area_entrance(self.config['environment'][scenario]['entrance_cells'])
 
         self.running = True
         self.datacollector.collect(self)
+
+    def load_gridmap(self, scenario):
+        path = self.config['environment'][scenario]['map_path']
+        grid_map = np.load(path)
+
+        return grid_map
+
+    @staticmethod
+    def clipped_normal_dist_prob(mu):
+        prob = np.random.normal(mu, mu/2)
+        prob = np.clip(prob, 0, 1)
+
+        return prob
 
     def get_unique_id(self):
         unique_id = self.global_max_index
@@ -39,8 +56,7 @@ class CoronavirusModel(Model):
         return unique_id
 
     def setup_agents(self):
-        choices = [CoronavirusAgentState.HEALTHY, CoronavirusAgentState.INFECTED]
-        
+
         home_coors = []
         for info in self.grid.coord_iter():
             contents = info[0]
@@ -49,11 +65,9 @@ class CoronavirusModel(Model):
                 if object.interior_type == InteriorType.INSIDE:
                     home_coors.append(coors)
 
-
         if self.num_agents > len(home_coors):
             self.num_agents = len(home_coors)
             print(f'Too many agents, they cannot fit into homes. Creating just: {self.num_agents}')
-
 
         for i in range(self.num_agents):
             ind = np.random.randint(0, len(home_coors), 1)[0]
@@ -61,8 +75,12 @@ class CoronavirusModel(Model):
             del home_coors[ind]  # make sure agents are not placed in the same cell
 
             home_id = [a.home_id for a in self.grid.get_cell_list_contents((x, y)) if type(a) == InteriorAgent]
-            a = CoronavirusAgent(self.get_unique_id(), self, self.random.choice(choices), home_id=home_id,
-                                config=self.config)
+            state = CoronavirusAgentState.HEALTHY
+            if np.random.rand() < self.config['common']['initially_infected_population']:
+                state = CoronavirusAgentState.INFECTED
+            a = CoronavirusAgent(self.get_unique_id(), self, state, home_id=home_id,
+                                 config=self.config,
+                                 going_out_prob=self.clipped_normal_dist_prob(self.going_out_prob_mean))
             self.schedule.add(a)
             self.grid.place_agent(a, (x, y))
             a.set_home_address((x, y))
@@ -85,7 +103,7 @@ class CoronavirusModel(Model):
                     self.setup_interior(r, c, self.get_unique_id(), InteriorType.INSIDE, grid_map[r, c],
                                         color=self.house_colors[grid_map[r, c]])
 
-    def setup_common_area_entrance(self, entrance_cell=(0, 0)):
+    def setup_common_area_entrance(self, entrance_cell=[(0, 0)]):
         self.common_area_entrance = entrance_cell
 
     def generate_house_colors(self, grid_map):

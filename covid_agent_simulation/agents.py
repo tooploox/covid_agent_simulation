@@ -18,7 +18,6 @@ class CoronavirusAgentState(Enum):
 
 class CoronavirusAgent(Agent):
 
-
     def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1,
                  max_being_out_steps=10, home_id=None, config=None):
         super().__init__(unique_id, model)
@@ -72,8 +71,9 @@ class CoronavirusAgent(Agent):
             self.model.grid.move_agent(self, self.random.choice(valid_steps))
 
     def go_out(self):
-        entrance_cell = self.model.common_area_entrance
-        entrance_area = [(entrance_cell[0]+a, entrance_cell[1]+ b) for a, b in zip([0, 1, 2, 3], [0, 1, 2, 3])]
+        entrance_cell = random.choice(self.model.common_area_entrance)
+        entrance_area = [(entrance_cell[0] + a, entrance_cell[1] + b)
+                         for a, b in zip([0, 1, 2, 3], [0, 1, 2, 3])]
         teleport_to_cell = random.choice(entrance_area)
         self.model.grid.move_agent(self, teleport_to_cell)
 
@@ -88,7 +88,9 @@ class CoronavirusAgent(Agent):
             if type(n) == CoronavirusAgent and \
                     n.state == CoronavirusAgentState.HEALTHY and \
                     self.random.uniform(0, 1) <\
-                    self.model.infection_probabilities[moore_distance(self.pos, n.pos) - 1]:
+                    self.model.infection_probabilities[moore_distance(self.pos, n.pos) - 1] and \
+                    (self.home_id == n.home_id or not(self.__is_home(self.pos) or self.__is_home(n.pos))):
+                print(self.random.uniform(0, 1))
                 n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
@@ -158,9 +160,7 @@ class InteriorAgent(Agent):
                      "Color": self.color,
                      "Layer": 0,
                      "w": 1,
-                     "h": 1,
-                     "Color": self.color,
-                     "Filled": "true"}
+                     "h": 1}
         return portrayal
 
 
