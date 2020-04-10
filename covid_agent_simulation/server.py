@@ -17,7 +17,7 @@ class BackgroundSetter(VisualizationElement):
 def agent_portrayal(agent):
     return agent.get_portrayal()
 
-config = get_config('./covid_agent_simulation/configs/mario_shapes.yml')
+config = get_config('./covid_agent_simulation/configs/simple_shapes.yml')
 
 grid_map = np.load('map.npy')
 grid = CanvasGrid(agent_portrayal, grid_map.shape[0], grid_map.shape[1], 700, 700)

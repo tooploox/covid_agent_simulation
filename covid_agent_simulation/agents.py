@@ -16,13 +16,6 @@ class CoronavirusAgentState(Enum):
     RECOVERED = 3
 
 
-class InteriorType(Enum):
-    HOME = 1
-    STORE = 2
-    PARK = 3
-    FOREST = 4
-
-
 class CoronavirusAgent(Agent):
 
 
