@@ -5,7 +5,32 @@ from mesa.datacollection import DataCollector
 import numpy as np
 import random
 
-from .agents import CoronavirusAgent, InteriorAgent, CoronavirusAgentState, InteriorType
+from .agents import (CoronavirusAgent, InteriorAgent,
+                     CoronavirusAgentState, InteriorType, WallAgent)
+
+
+class Counter:
+    _instance = None
+    _count = 0
+
+    @property
+    def count(self):
+        return self._count
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def add(self):
+        self._count += 1
+
+    def subtract(self):
+        if self._count > 0:
+            self._count -= 1
+
+    def reset(self):
+        self._count = 0
 
 
 class CoronavirusModel(Model):
@@ -14,8 +39,8 @@ class CoronavirusModel(Model):
 
         self.config = config
         np.random.RandomState(config['common']['random_seed'])
-
         grid_map = self.load_gridmap(scenario)
+
         self.num_agents = num_agents
         self.grid = MultiGrid(grid_map.shape[0], grid_map.shape[1], False)
         self.schedule = RandomActivation(self)
@@ -24,12 +49,29 @@ class CoronavirusModel(Model):
                              "Healthy": all_healthy,
                              "Recovered": all_recovered}
         )
+
+        # select cells that will be used as possible target cells
+        # for agents to head to.
+        # In current "outside" cells have value 0.
+        outside_cells = np.asarray(list(zip(*np.where(grid_map == 0))))
+        self.available_target_cells =\
+            outside_cells[np.random.choice(range(len(outside_cells)),
+                                           size=self.config['environment'][scenario]['num_target_cells'])]
+        self.counter = Counter()
+        self.counter.reset()
+        self.num_agents_allowed_outside = self.config['environment'][scenario]['num_agents_allowed']
+
         self.going_out_prob_mean = going_out_prob_mean
         self.global_max_index = 0
         self.house_colors = {}
         self.infection_probabilities = self.config['common']['infection_probabilities']
 
         self.setup_interiors(grid_map)
+
+        # Maybe it will look better with walls
+        # if we're going to have irregular shapes, but I don't know...
+        self.setup_walls()
+
         self.setup_agents()
         self.setup_common_area_entrance(self.config['environment'][scenario]['entrance_cells'])
 
@@ -55,6 +97,28 @@ class CoronavirusModel(Model):
 
         return unique_id
 
+    def setup_walls(self):
+        """
+        The idea here is that if we had 3 types of cells,
+        we could draw interiors as some irregular shapes where
+        agents can walk like aisles inside a store or alleys in a park.
+        In that case, to improve it visually we could bound those shapes
+        with "walls". Unfortunately it doesn't look that good in practice...
+        """
+
+        x_min = 10  # it would be extracted from a list of already drawn patches.
+        x_max = 18
+        y_min = 9
+        y_max = 17
+
+        for x in range(x_min, x_max):
+            w_1 = WallAgent(self.get_unique_id(), self, type='horizontal')
+            w_2 = WallAgent(self.get_unique_id(), self, type='horizontal')
+            self.grid.place_agent(w_1, (x, y_max))
+            self.grid.place_agent(w_2, (x, y_min))
+
+        # Vertical lines look strange...
+
     def setup_agents(self):
 
         home_coors = []
@@ -62,8 +126,11 @@ class CoronavirusModel(Model):
             contents = info[0]
             coors = info[1:]
             for object in contents:
-                if object.interior_type == InteriorType.INSIDE:
-                    home_coors.append(coors)
+                try:
+                    if object.interior_type == InteriorType.INSIDE:
+                        home_coors.append(coors)
+                except AttributeError:
+                    pass
 
         if self.num_agents > len(home_coors):
             self.num_agents = len(home_coors)
@@ -80,18 +147,17 @@ class CoronavirusModel(Model):
                 state = CoronavirusAgentState.INFECTED
             a = CoronavirusAgent(self.get_unique_id(), self, state, home_id=home_id,
                                  config=self.config,
-                                 going_out_prob=self.clipped_normal_dist_prob(self.going_out_prob_mean))
+                                 going_out_prob=self.clipped_normal_dist_prob(self.going_out_prob_mean),
+                                 outside_agents_counter=self.counter)
             self.schedule.add(a)
             self.grid.place_agent(a, (x, y))
             a.set_home_address((x, y))
-
 
     def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="white", shape=None):
             interior = InteriorAgent(agent_id, self, color, shape, interior_type, home_id)
             # origin of grid here is at left bottom, not like in opencv left top, so we need to flip y axis
             row = self.grid.height - row - 1
             self.grid.place_agent(interior, (column, row))
-
 
     def setup_interiors(self, grid_map):
         self.generate_house_colors(grid_map)
@@ -104,12 +170,21 @@ class CoronavirusModel(Model):
                                         color=self.house_colors[grid_map[r, c]])
 
     def setup_common_area_entrance(self, entrance_cell=[(0, 0)]):
+        # It could be extracted from a list of interior patches
+        # laying on the edge.
         self.common_area_entrance = entrance_cell
 
     def generate_house_colors(self, grid_map):
         house_num = int(grid_map.max())
+        colors = [80, 130, 200]
         for i in range(1, house_num + 1):
-            self.house_colors[i] = "#%06x" % random.randint(0, 0xFFFFFF)
+            # self.house_colors[i] = "#%06x" % random.randint(0, 0xFFFFFF)
+
+            # generate only grey houses
+            # completely random generation leads to similar colors
+            # next to each other
+            self.house_colors[i] =\
+                '#%02x%02x%02x' % tuple([colors[i % len(colors)]] * 3)
 
     def get_cell_id(self, pos):
         agents_in_cell = self.grid.get_cell_list_contents(pos)

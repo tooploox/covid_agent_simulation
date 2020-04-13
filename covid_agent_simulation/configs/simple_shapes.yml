@@ -1,8 +1,8 @@
 common:
   random_seed: 42
   grid:
-    n_rows: 50 # It must be adjusted to the final map
-    n_cols: 50 # It must be adjusted to the final map
+    n_rows: 20 # It must be adjusted to the final map
+    n_cols: 20 # It must be adjusted to the final map
     px_rows: 500
     px_cols: 700
   initially_infected_population: 0.01
@@ -13,16 +13,21 @@ common:
 environment:
   store:
     map_path: 'map.npy'
+    num_agents_allowed: 5
+    num_target_cells: 3
     entrance_cells:
-      - [10, 10]
-      - [10, 10]
+      - [13, 11]
   park:
     map_path: 'map.npy'
+    num_agents_allowed: 10
+    num_target_cells: 8
     entrance_cells:
       - [10, 10]
       - [10, 10]
   forest:
     map_path: 'map.npy'
+    num_agents_allowed: 15
+    num_target_cells: 30
     entrance_cells:
       - [10, 10]
       - [10, 10]
