@@ -41,7 +41,7 @@ agent:
       color: "green"
     recovered:
       shape: "circle"
-      color: "grey"
+      color: "blue"
 
 patch:
   home:

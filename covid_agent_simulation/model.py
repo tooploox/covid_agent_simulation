@@ -192,15 +192,18 @@ class CoronavirusModel(Model):
 
 
 def all_infected(model):
-    return get_all_in_state(model, CoronavirusAgentState.INFECTED)
+    return get_all_in_state(model, CoronavirusAgentState.INFECTED)\
+           / len(model.schedule.agents) * 100
 
 
 def all_healthy(model):
-    return get_all_in_state(model, CoronavirusAgentState.HEALTHY)
+    return get_all_in_state(model, CoronavirusAgentState.HEALTHY)\
+           / len(model.schedule.agents) * 100
 
 
 def all_recovered(model):
-    return get_all_in_state(model, CoronavirusAgentState.RECOVERED)
+    return get_all_in_state(model, CoronavirusAgentState.RECOVERED)\
+          / len(model.schedule.agents) * 100
 
 
 def get_all_in_state(model, state):

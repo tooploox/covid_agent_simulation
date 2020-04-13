@@ -29,7 +29,7 @@ grid = CanvasGrid(agent_portrayal, config['common']['grid']['n_cols'],
 chart = ChartModule([
     {"Label": "Infected", "Color": "#FF0000"}, 
     {"Label": "Healthy", "Color": "#00FF00"},
-    {"Label": "Recovered", "Color": "#666666"}],
+    {"Label": "Recovered", "Color": "#0000FF"}],
     data_collector_name='datacollector'
 )
 
