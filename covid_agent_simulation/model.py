@@ -9,17 +9,11 @@ from .agents import (CoronavirusAgent, InteriorAgent,
 
 
 class Counter:
-    _instance = None
     _count = 0
 
     @property
     def count(self):
         return self._count
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def add(self):
         self._count += 1
@@ -27,9 +21,6 @@ class Counter:
     def subtract(self):
         if self._count > 0:
             self._count -= 1
-
-    def reset(self):
-        self._count = 0
 
 
 class CoronavirusModel(Model):
@@ -57,7 +48,6 @@ class CoronavirusModel(Model):
             outside_cells[np.random.choice(range(len(outside_cells)),
                                            size=self.config['environment'][scenario]['num_target_cells'])]
         self.counter = Counter()
-        self.counter.reset()
         self.num_agents_allowed_outside = self.config['environment'][scenario]['num_agents_allowed']
 
         self.going_out_prob_mean = going_out_prob_mean
