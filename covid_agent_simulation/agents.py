@@ -2,6 +2,7 @@ from enum import Enum
 import math
 import random
 
+import numpy as np
 from mesa import Agent
 
 
@@ -19,7 +20,7 @@ class CoronavirusAgentState(Enum):
 class CoronavirusAgent(Agent):
 
     def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1,
-                 max_being_out_steps=10, home_id=None, config=None):
+                 max_being_out_steps=10, home_id=None, config=None, outside_agents_counter=None):
         super().__init__(unique_id, model)
         self.state = state
         self.infected_steps = 0
@@ -29,6 +30,9 @@ class CoronavirusAgent(Agent):
         self.home_id = home_id
         self.going_out_prob = going_out_prob
         self.config = config
+        self.outside_agents_counter = outside_agents_counter
+
+        self.target_cell = None
 
     def get_portrayal(self):
 
@@ -37,7 +41,9 @@ class CoronavirusAgent(Agent):
             "w": 0.5,
             "h": 0.5,
             "r": 0.5,
-            "Filled": "true"
+            "Filled": "true",
+            "text": self.unique_id,
+            "text_color": 'black'
         }
 
         if self.state == CoronavirusAgentState.INFECTED:
@@ -67,19 +73,49 @@ class CoronavirusAgent(Agent):
             valid_id = None
         valid_steps = [p for p in possible_steps if not self.__is_cell_taken(p) and
                        self.model.get_cell_id(p) == valid_id]
+
+        cell_scores = []
+        for step in valid_steps:
+            cell_score = 0
+
+            neighbors = self.model.grid.get_neighbors(step, moore=True,
+                                                      include_center=False)
+            moore_max_objects = 8
+            agents = [x for x in neighbors if isinstance(x, CoronavirusAgent)]
+
+            if self.target_cell is not None:
+                distance_to_target = moore_distance(step, self.target_cell)
+                score_bias = 0
+                if distance_to_target > 0:
+                    # prefer cells that minimize distance to target cell
+                    cell_score += 1/distance_to_target + score_bias
+                else:
+                    cell_score += score_bias
+
+            # prefer cells where there are fever agents around
+            cell_score += 1-(len(agents)/moore_max_objects)
+            cell_scores.append(cell_score)
+
         if len(valid_steps) > 0:
-            self.model.grid.move_agent(self, self.random.choice(valid_steps))
+            # There are usually more than one cell with the same score.
+            top_steps = np.argwhere(cell_scores == np.max(cell_scores)).flatten()
+            self.model.grid.move_agent(self,
+                                       valid_steps[self.random.choice(top_steps)])
 
     def go_out(self):
+        self.target_cell = self.random.choice(self.model.available_target_cells)
         entrance_cell = random.choice(self.model.common_area_entrance)
+
         entrance_area = [(entrance_cell[0] + a, entrance_cell[1] + b)
-                         for a, b in zip([0, 1, 2, 3], [0, 1, 2, 3])]
+                         for a, b in zip([0, 0], [0, 1])]
         teleport_to_cell = random.choice(entrance_area)
         self.model.grid.move_agent(self, teleport_to_cell)
+        self.outside_agents_counter.add()
 
     def return_home(self):
         self.model.grid.move_agent(self, self.home_cell)
         self.outside_steps = 0
+        self.outside_agents_counter.subtract()
 
     def infect(self):
         neighbors = self.model.grid.get_neighbors(self.pos, True, False,
@@ -101,7 +137,9 @@ class CoronavirusAgent(Agent):
                 [1-self.going_out_prob, self.going_out_prob],
                 k=1
             )
-            if movement_choice == [1]:
+            if movement_choice == [1]\
+                    and self.outside_agents_counter.count\
+                    < self.model.num_agents_allowed_outside:
                 self.go_out()
             else:
                 self.move()
@@ -161,6 +199,31 @@ class InteriorAgent(Agent):
                      "Layer": 0,
                      "w": 1,
                      "h": 1}
+        return portrayal
+
+
+class WallAgent(Agent):
+
+    def __init__(self, unique_id, model, color="black", type='horizontal'):
+        super().__init__(unique_id, model)
+        self.color = color
+        self.type = type.lower()
+
+    def step(self):
+        pass
+
+    def get_portrayal(self):
+        portrayal = {"Shape": 'rect',
+                     "Filled": "true",
+                     "Color": self.color,
+                     "Layer": 4,
+                     "w": 0.05,
+                     "h": 1}
+
+        if self.type == 'horizontal':
+            portrayal["w"] = 1
+            portrayal["h"] = 0.05
+
         return portrayal
 
 
