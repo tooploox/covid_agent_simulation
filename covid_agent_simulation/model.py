@@ -14,7 +14,7 @@ class CoronavirusModel(Model):
 
         self.config = config
         self.num_agents = num_agents
-        self.grid = MultiGrid(grid_map.shape[0], grid_map.shape[1], False)
+        self.grid = MultiGrid(grid_map.shape[1], grid_map.shape[0], False)
         self.schedule = RandomActivation(self)
         self.datacollector = DataCollector(
             model_reporters={"Infected": all_infected,
@@ -27,7 +27,7 @@ class CoronavirusModel(Model):
 
         self.setup_interiors(grid_map)
         self.setup_agents()
-        self.setup_common_area_entrance((10, 10))
+        self.setup_common_area_entrance(grid_map)
 
         self.running = True
         self.datacollector.collect(self)
@@ -46,14 +46,12 @@ class CoronavirusModel(Model):
             contents = info[0]
             coors = info[1:]
             for object in contents:
-                if object.interior_type == InteriorType.INSIDE:
+                if object.interior_type == InteriorType.HOME:
                     home_coors.append(coors)
-
 
         if self.num_agents > len(home_coors):
             self.num_agents = len(home_coors)
             print(f'Too many agents, they cannot fit into homes. Creating just: {self.num_agents}')
-
 
         for i in range(self.num_agents):
             ind = np.random.randint(0, len(home_coors), 1)[0]
@@ -67,26 +65,29 @@ class CoronavirusModel(Model):
             self.grid.place_agent(a, (x, y))
             a.set_home_address((x, y))
 
-
-    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="white", shape=None):
+    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="black", shape=None):
             interior = InteriorAgent(agent_id, self, color, shape, interior_type, home_id)
             # origin of grid here is at left bottom, not like in opencv left top, so we need to flip y axis
             row = self.grid.height - row - 1
             self.grid.place_agent(interior, (column, row))
-
 
     def setup_interiors(self, grid_map):
         self.generate_house_colors(grid_map)
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
                 if grid_map[r, c] == 0:
-                    self.setup_interior(r, c, self.get_unique_id(), grid_map[r, c], color="white")
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.UNREACHABLE, grid_map[r, c])
+                elif grid_map[r, c] == 1:
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.COMMON_SPACE, grid_map[r, c],
+                                        color='white')
                 else:
-                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.INSIDE, grid_map[r, c],
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.HOME, grid_map[r, c],
                                         color=self.house_colors[grid_map[r, c]])
 
-    def setup_common_area_entrance(self, entrance_cell=(0, 0)):
-        self.common_area_entrance = entrance_cell
+    def setup_common_area_entrance(self, grid_map):
+        positions = np.argwhere(grid_map == float(InteriorType.COMMON_SPACE.value))
+        pos = random.choice(positions)
+        self.common_area_entrance = (pos[1], pos[0])
 
     def generate_house_colors(self, grid_map):
         house_num = int(grid_map.max())

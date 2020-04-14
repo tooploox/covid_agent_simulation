@@ -5,29 +5,30 @@ import random
 
 USAGE = "Use mouse left button to fill cells. To change id, " \
         "press n for next and p for previous. " \
-        "Use c to clear. Use q to quit and save map. Common space has id 0"
+        "Use c to clear. Use q to quit and save map. " \
+        "Non movable space has id 0. Common space has id 1."
 
 
 class Map:
     def __init__(self, grid_width, grid_height):
         self.pixels_per_cell = 20
 
-        self.grid = np.zeros((grid_width, grid_height))
-        self.img = np.zeros((grid_width * self.pixels_per_cell,
-                             grid_height * self.pixels_per_cell, 3),
+        self.grid = np.zeros((grid_height, grid_width))
+        self.img = np.zeros((grid_height * self.pixels_per_cell,
+                             grid_width * self.pixels_per_cell, 3),
                             dtype=np.uint8)
         self.drawing = False
         self.house_id = 1
-        self.houses_colors = {0: (0, 0, 0), 1: (255, 0, 0)}
+        self.houses_colors = {0: (0, 0, 0), 1: (255, 255, 255), 2: (255, 0, 0)}
 
     def draw_grid(self):
         for r in range(self.img.shape[0]):
-            cv2.line(self.img, (r * self.pixels_per_cell, 0),
-                     (r * self.pixels_per_cell, self.img.shape[1]),
+            cv2.line(self.img, (0, r * self.pixels_per_cell),
+                     (self.img.shape[1], r * self.pixels_per_cell),
                      (255, 255, 255))
         for c in range(self.img.shape[1]):
-            cv2.line(self.img, (0, c * self.pixels_per_cell),
-                     (self.img.shape[1], c * self.pixels_per_cell),
+            cv2.line(self.img, (c * self.pixels_per_cell, 0),
+                     (c * self.pixels_per_cell, self.img.shape[1]),
                      (255, 255, 255))
 
     def get_img(self):
