@@ -7,8 +7,9 @@ from mesa import Agent
 
 
 class InteriorType(Enum):
-    INSIDE = 1
-    OUTSIDE = 2
+    UNREACHABLE = 0
+    COMMON_SPACE = 1
+    HOME = 2
 
 
 class CoronavirusAgentState(Enum):
@@ -18,7 +19,6 @@ class CoronavirusAgentState(Enum):
 
 
 class CoronavirusAgent(Agent):
-
     def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1,
                  max_being_out_steps=10, home_id=None, config=None, outside_agents_counter=None):
         super().__init__(unique_id, model)
@@ -42,7 +42,7 @@ class CoronavirusAgent(Agent):
             "h": 0.5,
             "r": 0.5,
             "Filled": "true",
-            "text": self.unique_id,
+            #"text": self.unique_id,
             "text_color": 'black'
         }
 
@@ -70,7 +70,7 @@ class CoronavirusAgent(Agent):
         if self.__is_home(self.pos):
             valid_id = self.home_id
         else:
-            valid_id = None
+            valid_id = InteriorType.COMMON_SPACE.value
         valid_steps = [p for p in possible_steps if not self.__is_cell_taken(p) and
                        self.model.get_cell_id(p) == valid_id]
 
@@ -104,13 +104,13 @@ class CoronavirusAgent(Agent):
 
     def go_out(self):
         self.target_cell = self.random.choice(self.model.available_target_cells)
-        entrance_cell = random.choice(self.model.common_area_entrance)
+        entrance_cell = random.choice(self.model.common_area_entrances)
 
-        entrance_area = [(entrance_cell[0] + a, entrance_cell[1] + b)
+        entrance_area = [(entrance_cell[1] + a, entrance_cell[0] + b)
                          for a, b in zip([0, 0], [0, 1])]
+        entrance_area = [pos for pos in entrance_area if self.__location(pos) == InteriorType.COMMON_SPACE]
         teleport_to_cell = random.choice(entrance_area)
         self.model.grid.move_agent(self, teleport_to_cell)
-        self.outside_agents_counter.add()
 
     def return_home(self):
         self.model.grid.move_agent(self, self.home_cell)
@@ -130,7 +130,7 @@ class CoronavirusAgent(Agent):
                 n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
-        if self.__location(self.pos) == InteriorType.INSIDE:
+        if self.__location(self.pos) == InteriorType.HOME:
             # agent is at home and might go out
             movement_choice = random.choices(
                 [0, 1],
@@ -179,7 +179,7 @@ class CoronavirusAgent(Agent):
 
 
 class InteriorAgent(Agent):
-    def __init__(self, unique_id, model, color="yellow", shape=None, interior_type=None, home_id=None):
+    def __init__(self, unique_id, model, color="AliceBlue", shape=None, interior_type=None, home_id=None):
         super().__init__(unique_id, model)
         self.color = color
         self.interior_type = interior_type
@@ -203,7 +203,6 @@ class InteriorAgent(Agent):
 
 
 class WallAgent(Agent):
-
     def __init__(self, unique_id, model, color="black", type='horizontal'):
         super().__init__(unique_id, model)
         self.color = color

@@ -32,7 +32,7 @@ class CoronavirusModel(Model):
         grid_map = self.load_gridmap(scenario)
 
         self.num_agents = num_agents
-        self.grid = MultiGrid(grid_map.shape[0], grid_map.shape[1], False)
+        self.grid = MultiGrid(grid_map.shape[1], grid_map.shape[0], False)
         self.schedule = RandomActivation(self)
         self.datacollector = DataCollector(
             model_reporters={"Infected": all_infected,
@@ -41,11 +41,10 @@ class CoronavirusModel(Model):
         )
 
         # select cells that will be used as possible target cells
-        # for agents to head to.
-        # In current "outside" cells have value 0.
-        outside_cells = np.asarray(list(zip(*np.where(grid_map == 0))))
+        # for agents to head to. They have home_id as InteriorType.COMMON_SPACE.value
+        common_space_cells = np.asarray(list(zip(*np.where(grid_map == InteriorType.COMMON_SPACE.value))))
         self.available_target_cells =\
-            outside_cells[np.random.choice(range(len(outside_cells)),
+            common_space_cells[np.random.choice(range(len(common_space_cells)),
                                            size=self.config['environment'][scenario]['num_target_cells'])]
         self.counter = Counter()
         self.num_agents_allowed_outside = self.config['environment'][scenario]['num_agents_allowed']
@@ -59,7 +58,7 @@ class CoronavirusModel(Model):
 
         # Maybe it will look better with walls
         # if we're going to have irregular shapes, but I don't know...
-        self.setup_walls()
+        #self.setup_walls()
 
         self.setup_agents()
         self.setup_common_area_entrance(self.config['environment'][scenario]['entrance_cells'])
@@ -77,7 +76,7 @@ class CoronavirusModel(Model):
     def clipped_normal_dist_prob(mu):
         prob = np.random.normal(mu, mu/2)
         prob = np.clip(prob, 0, 1)
-
+        print(prob)
         return prob
 
     def get_unique_id(self):
@@ -109,14 +108,13 @@ class CoronavirusModel(Model):
         # Vertical lines look strange...
 
     def setup_agents(self):
-
         home_coors = []
         for info in self.grid.coord_iter():
             contents = info[0]
             coors = info[1:]
             for object in contents:
                 try:
-                    if object.interior_type == InteriorType.INSIDE:
+                    if object.interior_type == InteriorType.HOME:
                         home_coors.append(coors)
                 except AttributeError:
                     pass
@@ -142,7 +140,7 @@ class CoronavirusModel(Model):
             self.grid.place_agent(a, (x, y))
             a.set_home_address((x, y))
 
-    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="white", shape=None):
+    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="AliceBlue", shape=None):
             interior = InteriorAgent(agent_id, self, color, shape, interior_type, home_id)
             # origin of grid here is at left bottom, not like in opencv left top, so we need to flip y axis
             row = self.grid.height - row - 1
@@ -153,15 +151,16 @@ class CoronavirusModel(Model):
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
                 if grid_map[r, c] == 0:
-                    self.setup_interior(r, c, self.get_unique_id(), grid_map[r, c], color="white")
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.UNREACHABLE, grid_map[r, c])
+                elif grid_map[r, c] == 1:
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.COMMON_SPACE, grid_map[r, c],
+                                        color='white')
                 else:
-                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.INSIDE, grid_map[r, c],
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.HOME, grid_map[r, c],
                                         color=self.house_colors[grid_map[r, c]])
 
-    def setup_common_area_entrance(self, entrance_cell=[(0, 0)]):
-        # It could be extracted from a list of interior patches
-        # laying on the edge.
-        self.common_area_entrance = entrance_cell
+    def setup_common_area_entrance(self, entrances):
+        self.common_area_entrances = entrances
 
     def generate_house_colors(self, grid_map):
         house_num = int(grid_map.max())

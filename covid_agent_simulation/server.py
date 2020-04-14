@@ -6,6 +6,8 @@ from mesa.visualization.UserParam import UserSettableParameter
 from .model import CoronavirusModel
 from .utils import get_config
 
+import numpy as np
+
 
 class BackgroundSetter(VisualizationElement):
     def __init__(self, url):
@@ -16,9 +18,11 @@ class BackgroundSetter(VisualizationElement):
 def agent_portrayal(agent):
     return agent.get_portrayal()
 
+
 config = get_config('./covid_agent_simulation/configs/simple_shapes.yml')
-grid = CanvasGrid(agent_portrayal, config['common']['grid']['n_cols'],
-                  config['common']['grid']['n_rows'],
+scenario = 'park'
+grid_map = np.load(config['environment'][scenario]['map_path'])
+grid = CanvasGrid(agent_portrayal, grid_map.shape[1], grid_map.shape[0],
                   config['common']['grid']['px_cols'],
                   config['common']['grid']['px_rows'])
 
@@ -41,7 +45,7 @@ model_params = {
         UserSettableParameter('slider', "Average probability of leaving home", 0.5, 0, 1, 0.1,
                                description="Choose how probably, in general, will be going out"),
 
-    "scenario": UserSettableParameter('choice', 'Scenario', value='park',
+    "scenario": UserSettableParameter('choice', 'Scenario', value=scenario,
                                       choices=['store', 'park', 'forest']),
     "config": config
 }
