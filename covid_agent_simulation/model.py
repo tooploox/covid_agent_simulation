@@ -25,7 +25,7 @@ class Counter:
 
 class CoronavirusModel(Model):
     def __init__(self, num_agents=10,
-                 config=None, scenario='park', going_out_prob_mean=0.5):
+                 config=None, scenario='park', going_out_prob_mean=0.05):
 
         self.config = config
         np.random.RandomState(config['common']['random_seed'])
@@ -49,7 +49,7 @@ class CoronavirusModel(Model):
         self.counter = Counter()
         self.num_agents_allowed_outside = self.config['environment'][scenario]['num_agents_allowed']
 
-        self.going_out_prob_mean = going_out_prob_mean
+        self.going_out_prob_mean = going_out_prob_mean/10
         self.global_max_index = 0
         self.house_colors = {}
         self.infection_probabilities = self.config['common']['infection_probabilities']
@@ -123,6 +123,7 @@ class CoronavirusModel(Model):
             self.num_agents = len(home_coors)
             print(f'Too many agents, they cannot fit into homes. Creating just: {self.num_agents}')
 
+        nb_infected = 0
         for i in range(self.num_agents):
             ind = np.random.randint(0, len(home_coors), 1)[0]
             x, y = home_coors[ind]
@@ -130,8 +131,11 @@ class CoronavirusModel(Model):
 
             home_id = [a.home_id for a in self.grid.get_cell_list_contents((x, y)) if type(a) == InteriorAgent]
             state = CoronavirusAgentState.HEALTHY
-            if np.random.rand() < self.config['common']['initially_infected_population']:
+            # if np.random.rand() < self.config['common']['initially_infected_population']:
+            # number of initially infected should not be random but a percentage
+            if nb_infected < int(self.config['common']['initially_infected_population'] *self.num_agents):
                 state = CoronavirusAgentState.INFECTED
+                nb_infected +=1
             a = CoronavirusAgent(self.get_unique_id(), self, state, home_id=home_id,
                                  config=self.config,
                                  going_out_prob=self.clipped_normal_dist_prob(self.going_out_prob_mean),

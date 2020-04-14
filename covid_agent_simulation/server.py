@@ -19,7 +19,7 @@ def agent_portrayal(agent):
     return agent.get_portrayal()
 
 
-config = get_config('./covid_agent_simulation/configs/simple_shapes.yml')
+config = get_config('./covid_agent_simulation/configs/park_scenario.yml')
 scenario = 'park'
 grid_map = np.load(config['environment'][scenario]['map_path'])
 grid = CanvasGrid(agent_portrayal, grid_map.shape[1], grid_map.shape[0],

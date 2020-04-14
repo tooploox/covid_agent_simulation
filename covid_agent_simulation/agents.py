@@ -19,14 +19,14 @@ class CoronavirusAgentState(Enum):
 
 
 class CoronavirusAgent(Agent):
-    def __init__(self, unique_id, model, state, max_infection_steps=28, going_out_prob=0.1,
+    def __init__(self, unique_id, model, state, min_infection_steps=10,max_infection_steps=140, going_out_prob=0.1,
                  max_being_out_steps=10, home_id=None, config=None, outside_agents_counter=None):
         super().__init__(unique_id, model)
         self.state = state
         self.infected_steps = 0
         self.outside_steps = 0
-        self.max_infection_steps = max_infection_steps
-        self.max_being_out_steps = max_being_out_steps
+        self.max_infection_steps = random.randint(min_infection_steps, max_infection_steps)
+        self.max_being_out_steps = random.randint(1,max_being_out_steps)
         self.home_id = home_id
         self.going_out_prob = going_out_prob
         self.config = config
