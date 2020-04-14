@@ -12,13 +12,13 @@ class Map:
     def __init__(self, grid_width, grid_height):
         self.pixels_per_cell = 20
 
-        self.grid = np.zeros((grid_width, grid_height))
+        self.grid = np.ones((grid_width, grid_height)) * -1
         self.img = np.zeros((grid_width * self.pixels_per_cell,
                              grid_height * self.pixels_per_cell, 3),
                             dtype=np.uint8)
         self.drawing = False
         self.house_id = 1
-        self.houses_colors = {0: (0, 0, 0), 1: (255, 0, 0)}
+        self.houses_colors = {0: (255, 255, 255), 1: (255, 0, 0)}
 
     def draw_grid(self):
         for r in range(self.img.shape[0]):
@@ -71,6 +71,7 @@ def draw_map(grid_width, grid_height, save_path):
     cv2.namedWindow('map')
     cv2.setMouseCallback('map', map.fill_cell)
     house_id = 1
+    INTERIOR_ID = 0
     while True:
         k = cv2.waitKey(1) & 0xFF
 
@@ -88,6 +89,9 @@ def draw_map(grid_width, grid_height, save_path):
                 map.set_id(house_id)
         elif k == ord('c'):
             map.clear()
+
+        elif k == ord('i'):
+            map.set_id(INTERIOR_ID)
 
         cv2.imshow('map', map.get_img())
 

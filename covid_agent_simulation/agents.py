@@ -40,9 +40,9 @@ class CoronavirusAgent(Agent):
             "Layer": 1,
             "w": 0.5,
             "h": 0.5,
-            "r": 0.5,
+            "r": 0.7,
             "Filled": "true",
-            "text": self.unique_id,
+            "text": str(self.unique_id)[:-2],
             "text_color": 'black'
         }
 
@@ -72,7 +72,8 @@ class CoronavirusAgent(Agent):
         else:
             valid_id = None
         valid_steps = [p for p in possible_steps if not self.__is_cell_taken(p) and
-                       self.model.get_cell_id(p) == valid_id]
+                       self.model.get_cell_id(p) == valid_id
+                       and self.__is_accessible(p)]
 
         cell_scores = []
         for step in valid_steps:
@@ -165,6 +166,14 @@ class CoronavirusAgent(Agent):
                 return True
         return False
 
+    def __is_accessible(self, pos):
+        agents_in_cell = self.model.grid.get_cell_list_contents(pos)
+        for a in agents_in_cell:
+            if type(a) == InteriorAgent:
+                if not a.accessible:
+                    return False
+        return True
+
     def __is_home(self, pos):
         agents_in_cell = self.model.grid.get_cell_list_contents(pos)
         for a in agents_in_cell:
@@ -179,7 +188,8 @@ class CoronavirusAgent(Agent):
 
 
 class InteriorAgent(Agent):
-    def __init__(self, unique_id, model, color="yellow", shape=None, interior_type=None, home_id=None):
+    def __init__(self, unique_id, model, color="yellow", shape=None, interior_type=None, home_id=None,
+                 accessible=True):
         super().__init__(unique_id, model)
         self.color = color
         self.interior_type = interior_type
@@ -188,6 +198,7 @@ class InteriorAgent(Agent):
             self.shape = shape
         else:
             self.shape = "rect"
+        self.accessible = accessible
 
     def step(self):
         pass
@@ -217,12 +228,8 @@ class WallAgent(Agent):
                      "Filled": "true",
                      "Color": self.color,
                      "Layer": 4,
-                     "w": 0.05,
+                     "w": 1,
                      "h": 1}
-
-        if self.type == 'horizontal':
-            portrayal["w"] = 1
-            portrayal["h"] = 0.05
 
         return portrayal
 

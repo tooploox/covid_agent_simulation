@@ -35,13 +35,16 @@ chart = ChartModule([
 
 model_params = {
     "num_agents":
-        UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
+        UserSettableParameter('slider', "Number of agents", 10, 2, 300, 5,
                               description="Choose how many agents to include in the model"),
+    "num_agents_allowed_outside":
+        UserSettableParameter('slider', "Number of agents allowed outside", 10, 2, 50, 5,
+                              description="Choose how many agents to allow outside at the same time"),
     "going_out_prob_mean":
         UserSettableParameter('slider', "Average probability of leaving home", 0.5, 0, 1, 0.1,
-                               description="Choose how probably, in general, will be going out"),
+                              description="Choose how probably, in general, will be going out"),
 
-    "scenario": UserSettableParameter('choice', 'Scenario', value='park',
+    "scenario": UserSettableParameter('choice', 'Scenario', value='store',
                                       choices=['store', 'park', 'forest']),
     "config": config
 }

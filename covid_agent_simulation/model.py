@@ -25,14 +25,15 @@ class Counter:
 
 class CoronavirusModel(Model):
     def __init__(self, num_agents=10,
-                 config=None, scenario='park', going_out_prob_mean=0.5):
+                 config=None, scenario='store', going_out_prob_mean=0.5,
+                 num_agents_allowed_outside=None):
 
         self.config = config
         np.random.RandomState(config['common']['random_seed'])
-        grid_map = self.load_gridmap(scenario)
+        self.grid_map = self.load_gridmap(scenario)
 
         self.num_agents = num_agents
-        self.grid = MultiGrid(grid_map.shape[0], grid_map.shape[1], False)
+        self.grid = MultiGrid(self.grid_map.shape[0], self.grid_map.shape[1], False)
         self.schedule = RandomActivation(self)
         self.datacollector = DataCollector(
             model_reporters={"Infected": all_infected,
@@ -43,26 +44,27 @@ class CoronavirusModel(Model):
         # select cells that will be used as possible target cells
         # for agents to head to.
         # In current "outside" cells have value 0.
-        outside_cells = np.asarray(list(zip(*np.where(grid_map == 0))))
+        outside_cells = np.asarray(list(zip(*np.where(self.grid_map == 0))))
         self.available_target_cells =\
             outside_cells[np.random.choice(range(len(outside_cells)),
                                            size=self.config['environment'][scenario]['num_target_cells'])]
         self.counter = Counter()
         self.num_agents_allowed_outside = self.config['environment'][scenario]['num_agents_allowed']
+        if num_agents_allowed_outside is not None:
+            self.num_agents_allowed_outside = num_agents_allowed_outside
 
         self.going_out_prob_mean = going_out_prob_mean
         self.global_max_index = 0
         self.house_colors = {}
         self.infection_probabilities = self.config['common']['infection_probabilities']
 
-        self.setup_interiors(grid_map)
-
-        # Maybe it will look better with walls
-        # if we're going to have irregular shapes, but I don't know...
-        self.setup_walls()
+        self.setup_interiors(self.grid_map)
 
         self.setup_agents()
         self.setup_common_area_entrance(self.config['environment'][scenario]['entrance_cells'])
+        # Maybe it will look better with walls
+        # if we're going to have irregular shapes, but I don't know...
+        self.setup_walls()
 
         self.running = True
         self.datacollector.collect(self)
@@ -95,18 +97,31 @@ class CoronavirusModel(Model):
         with "walls". Unfortunately it doesn't look that good in practice...
         """
 
-        x_min = 10  # it would be extracted from a list of already drawn patches.
-        x_max = 18
-        y_min = 9
-        y_max = 17
+        interiors = np.asarray(np.where(self.grid_map == 0))
+        x_coors = interiors[1, :]
+        y_coors = self.grid.height - interiors[0, :] - 1
+
+        x_min = min(x_coors) - 1
+        x_max = max(x_coors) + 2
+        y_min = min(y_coors) - 1
+        y_max = max(y_coors) + 1
 
         for x in range(x_min, x_max):
-            w_1 = WallAgent(self.get_unique_id(), self, type='horizontal')
-            w_2 = WallAgent(self.get_unique_id(), self, type='horizontal')
-            self.grid.place_agent(w_1, (x, y_max))
-            self.grid.place_agent(w_2, (x, y_min))
+            w_1 = WallAgent(self.get_unique_id(), self)
+            w_2 = WallAgent(self.get_unique_id(), self)
 
-        # Vertical lines look strange...
+            if [x, y_max - 1] not in self.common_area_entrance:
+                self.grid.place_agent(w_1, (x, y_max))
+            if [x, y_min + 1] not in self.common_area_entrance:
+                self.grid.place_agent(w_2, (x, y_min))
+
+        for y in range(y_min + 1, y_max):
+            w_1 = WallAgent(self.get_unique_id(), self)
+            w_2 = WallAgent(self.get_unique_id(), self)
+            if [x_min + 1, y] not in self.common_area_entrance:
+                self.grid.place_agent(w_1, (x_min, y))
+            if [x_max - 1, y] not in self.common_area_entrance:
+                self.grid.place_agent(w_2, (x_max - 1, y))
 
     def setup_agents(self):
 
@@ -142,8 +157,9 @@ class CoronavirusModel(Model):
             self.grid.place_agent(a, (x, y))
             a.set_home_address((x, y))
 
-    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="white", shape=None):
-            interior = InteriorAgent(agent_id, self, color, shape, interior_type, home_id)
+    def setup_interior(self, row, column, agent_id, interior_type, home_id=None, color="white", shape=None,
+                       accessible=True):
+            interior = InteriorAgent(agent_id, self, color, shape, interior_type, home_id, accessible)
             # origin of grid here is at left bottom, not like in opencv left top, so we need to flip y axis
             row = self.grid.height - row - 1
             self.grid.place_agent(interior, (column, row))
@@ -153,7 +169,10 @@ class CoronavirusModel(Model):
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
                 if grid_map[r, c] == 0:
-                    self.setup_interior(r, c, self.get_unique_id(), grid_map[r, c], color="white")
+                    self.setup_interior(r, c, self.get_unique_id(), grid_map[r, c], color="#9d9dff")
+                elif grid_map[r, c] == -1:
+                    self.setup_interior(r, c, self.get_unique_id(), grid_map[r, c], color="white",
+                                        accessible=False)
                 else:
                     self.setup_interior(r, c, self.get_unique_id(), InteriorType.INSIDE, grid_map[r, c],
                                         color=self.house_colors[grid_map[r, c]])
