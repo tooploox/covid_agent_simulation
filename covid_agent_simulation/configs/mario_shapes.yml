@@ -1,3 +1,27 @@
+common:
+  random_seed: 42
+  grid:
+    px_rows: 500
+    px_cols: 700
+  initially_infected_population: 0.1
+  infection_probabilities:
+    - 0.3
+    - 0.1
+
+environment:
+  store:
+    map_path: 'map.npy'
+    entrance_cells:
+      - [25, 55]
+  park:
+    map_path: 'map.npy'
+    entrance_cells:
+      - [25, 55]
+  forest:
+    map_path: 'map.npy'
+    entrance_cells:
+      - [25, 55]
+
 agent:
   infected:
     shape: "covid_agent_simulation/resources/sick.png"
