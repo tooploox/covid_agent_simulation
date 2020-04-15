@@ -126,7 +126,6 @@ class CoronavirusAgent(Agent):
                     self.random.uniform(0, 1) <\
                     self.model.infection_probabilities[moore_distance(self.pos, n.pos) - 1] and \
                     (self.home_id == n.home_id or not(self.__is_home(self.pos) or self.__is_home(n.pos))):
-                print(self.random.uniform(0, 1))
                 n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
