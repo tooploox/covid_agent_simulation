@@ -10,16 +10,22 @@ USAGE = "Use mouse left button to fill cells. To change id, " \
 
 
 class Map:
-    def __init__(self, grid_width, grid_height):
+    def __init__(self, grid_width, grid_height, load_path):
         self.pixels_per_cell = 20
-
-        self.grid = np.zeros((grid_height, grid_width))
-        self.img = np.zeros((grid_height * self.pixels_per_cell,
-                             grid_width * self.pixels_per_cell, 3),
-                            dtype=np.uint8)
-        self.drawing = False
         self.house_id = 1
+        self.drawing = False
         self.houses_colors = {0: (0, 0, 0), 1: (255, 255, 255), 2: (255, 0, 0)}
+
+        if load_path is None:
+            self.grid = np.zeros((grid_height, grid_width))
+            self.img = np.zeros((grid_height * self.pixels_per_cell,
+                                 grid_width * self.pixels_per_cell, 3),
+                                dtype=np.uint8)
+        else:
+            self.__load_grid(load_path)
+            self.img = np.zeros((self.grid.shape[0] * self.pixels_per_cell, self.grid.shape[1] * self.pixels_per_cell,
+                                 3), dtype=np.uint8)
+            self.__draw_initial_houses()
 
     def draw_grid(self):
         for r in range(self.img.shape[0]):
@@ -57,21 +63,35 @@ class Map:
             self.houses_colors[house_id] = (random.randint(0, 255),
                                             random.randint(0, 255),
                                             random.randint(0, 255))
-
-        print(self.houses_colors)
         self.house_id = house_id
+
+    def get_id(self):
+        return self.house_id
 
     def clear(self):
         self.grid.fill(0)
         self.img.fill(0)
         self.drawing = False
 
+    def __load_grid(self, load_path):
+        self.grid = np.load(load_path)
 
-def draw_map(grid_width, grid_height, save_path):
-    map = Map(grid_width, grid_height)
+    def __draw_initial_houses(self):
+        house_number = int(self.grid.max()) + 1
+        for i in range(2, house_number + 1):
+            self.set_id(i)
+
+        for r in range(self.grid.shape[0]):
+            for c in range(self.grid.shape[1]):
+                self.img[r * self.pixels_per_cell:(r + 1) * self.pixels_per_cell,
+                         c * self.pixels_per_cell:(c + 1) * self.pixels_per_cell] = \
+                    self.houses_colors[int(self.grid[r, c])]
+
+
+def draw_map(grid_width, grid_height, save_path, load_path):
+    map = Map(grid_width, grid_height, load_path)
     cv2.namedWindow('map')
     cv2.setMouseCallback('map', map.fill_cell)
-    house_id = 1
     while True:
         k = cv2.waitKey(1) & 0xFF
 
@@ -79,14 +99,12 @@ def draw_map(grid_width, grid_height, save_path):
         if k == ord('q'):
             break
         elif k == ord('n'):
-            house_id += 1
-            print('Incrementing id:', house_id)
-            map.set_id(house_id)
+            map.set_id(map.get_id() + 1)
+            print('Incrementing id:', map.get_id())
         elif k == ord('p'):
-            if house_id > 0:
-                house_id -= 1
-                print('Decrementing id:', house_id)
-                map.set_id(house_id)
+            if map.get_id() > 0:
+                map.set_id(map.get_id() - 1)
+                print('Decrementing id:', map.get_id())
         elif k == ord('c'):
             map.clear()
 
@@ -101,10 +119,11 @@ def parse_arguments():
     parser.add_argument("--grid_width", default=50, type=int)
     parser.add_argument("--grid_height", default=50, type=int)
     parser.add_argument("--save_path", default="map.npy")
+    parser.add_argument("--load_path", default=None)
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     print(USAGE)
     args = parse_arguments()
-    draw_map(args.grid_width, args.grid_height, args.save_path)
+    draw_map(args.grid_width, args.grid_height, args.save_path, args.load_path)
