@@ -19,10 +19,10 @@ def agent_portrayal(agent):
     return agent.get_portrayal()
 
 
-config = get_config('./covid_agent_simulation/configs/park_scenario.yml')
-scenario = 'park'
-grid_map = np.load(config['environment'][scenario]['map_path'])
-grid = CanvasGrid(agent_portrayal, grid_map.shape[1], grid_map.shape[0],
+config = get_config('./covid_agent_simulation/configs/simple_shapes.yml')
+grid = CanvasGrid(agent_portrayal,
+                  config['common']['grid']['cols'],
+                  config['common']['grid']['rows'],
                   config['common']['grid']['px_cols'],
                   config['common']['grid']['px_rows'])
 
@@ -45,7 +45,7 @@ model_params = {
         UserSettableParameter('slider', "Average probability of leaving home", 0.5, 0, 1, 0.1,
                                description="Choose how probably, in general, will be going out"),
 
-    "scenario": UserSettableParameter('choice', 'Scenario', value=scenario,
+    "scenario": UserSettableParameter('choice', 'Scenario', value='store',
                                       choices=['store', 'park', 'forest']),
     "config": config
 }
