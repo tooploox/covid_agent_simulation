@@ -123,7 +123,7 @@ class CoronavirusModel(Model):
             self.num_agents = len(home_coors)
             print(f'Too many agents, they cannot fit into homes. Creating just: {self.num_agents}')
 
-        nb_infected = 0
+        nb_infected, nb_recovered = 0, 0
         for i in range(self.num_agents):
             ind = np.random.randint(0, len(home_coors), 1)[0]
             x, y = home_coors[ind]
@@ -136,6 +136,9 @@ class CoronavirusModel(Model):
             if nb_infected < int(self.config['common']['initially_infected_population'] *self.num_agents):
                 state = CoronavirusAgentState.INFECTED
                 nb_infected +=1
+            elif nb_recovered < int(self.config['common']['initially_recovered_population'] *self.num_agents):
+                state = CoronavirusAgentState.RECOVERED
+                nb_recovered += 1
             a = CoronavirusAgent(self.get_unique_id(), self, state, home_id=home_id,
                                  config=self.config,
                                  going_out_prob=self.clipped_normal_dist_prob(self.going_out_prob_mean),

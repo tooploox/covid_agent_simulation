@@ -111,6 +111,7 @@ class CoronavirusAgent(Agent):
         entrance_area = [pos for pos in entrance_area if self.__location(pos) == InteriorType.COMMON_SPACE]
         teleport_to_cell = random.choice(entrance_area)
         self.model.grid.move_agent(self, teleport_to_cell)
+        self.outside_agents_counter.add()
 
     def return_home(self):
         self.model.grid.move_agent(self, self.home_cell)
