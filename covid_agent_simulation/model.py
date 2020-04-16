@@ -32,6 +32,7 @@ class CoronavirusModel(Model):
         grid_map = self.load_gridmap(scenario)
 
         self.num_agents = num_agents
+        self.scenario = scenario
         self.grid = MultiGrid(grid_map.shape[1], grid_map.shape[0], False)
         self.schedule = RandomActivation(self)
         self.datacollector = DataCollector(
@@ -51,7 +52,6 @@ class CoronavirusModel(Model):
 
         self.going_out_prob_mean = going_out_prob_mean/10
         self.global_max_index = 0
-        self.house_colors = {}
         self.infection_probabilities = self.config['common']['infection_probabilities']
 
         self.setup_interiors(grid_map)
@@ -76,7 +76,6 @@ class CoronavirusModel(Model):
     def clipped_normal_dist_prob(mu):
         prob = np.random.normal(mu, mu/2)
         prob = np.clip(prob, 0, 1)
-        print(prob)
         return prob
 
     def get_unique_id(self):
@@ -141,6 +140,7 @@ class CoronavirusModel(Model):
                 nb_recovered += 1
             a = CoronavirusAgent(self.get_unique_id(), self, state, home_id=home_id,
                                  config=self.config,
+                                 max_being_out_steps=self.config['environment'][self.scenario]['max_time_outside'],
                                  going_out_prob=self.clipped_normal_dist_prob(self.going_out_prob_mean),
                                  outside_agents_counter=self.counter)
             self.schedule.add(a)
@@ -154,7 +154,6 @@ class CoronavirusModel(Model):
             self.grid.place_agent(interior, (column, row))
 
     def setup_interiors(self, grid_map):
-        self.generate_house_colors(grid_map)
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
                 if grid_map[r, c] == 0:
@@ -164,22 +163,11 @@ class CoronavirusModel(Model):
                                         color='white')
                 else:
                     self.setup_interior(r, c, self.get_unique_id(), InteriorType.HOME, grid_map[r, c],
-                                        color=self.house_colors[grid_map[r, c]])
+                                        color='lightgray')
 
     def setup_common_area_entrance(self, entrances):
-        self.common_area_entrances = entrances
-
-    def generate_house_colors(self, grid_map):
-        house_num = int(grid_map.max())
-        colors = [80, 130, 200]
-        for i in range(1, house_num + 1):
-            # self.house_colors[i] = "#%06x" % random.randint(0, 0xFFFFFF)
-
-            # generate only grey houses
-            # completely random generation leads to similar colors
-            # next to each other
-            self.house_colors[i] =\
-                '#%02x%02x%02x' % tuple([colors[i % len(colors)]] * 3)
+        entrances_flip_row = [[self.grid.height - e[0] - 1, e[1]] for e in entrances]
+        self.common_area_entrances = entrances_flip_row
 
     def get_cell_id(self, pos):
         agents_in_cell = self.grid.get_cell_list_contents(pos)

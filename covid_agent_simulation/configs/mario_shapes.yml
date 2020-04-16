@@ -1,26 +1,37 @@
 common:
   random_seed: 42
   grid:
+    rows: 50
+    cols: 80
     px_rows: 500
-    px_cols: 700
+    px_cols: 900
   initially_infected_population: 0.1
   infection_probabilities:
-    - 0.3
-    - 0.1
+    - 0.5
+    - 0.2
 
 environment:
   store:
-    map_path: 'map.npy'
+    map_path: 'store_map.npy'
+    num_agents_allowed: 5
+    num_target_cells: 3
     entrance_cells:
-      - [25, 55]
+      - [35, 66]
   park:
-    map_path: 'map.npy'
+    map_path: 'park_map.npy'
+    num_agents_allowed: 10
+    num_target_cells: 8
     entrance_cells:
-      - [25, 55]
+      - [35, 66]
+      - [34, 42]
   forest:
-    map_path: 'map.npy'
+    map_path: 'forest_map.npy'
+    num_agents_allowed: 15
+    num_target_cells: 30
     entrance_cells:
-      - [25, 55]
+      - [35, 66]
+      - [34, 42]
+      - [14, 68]
 
 agent:
   infected:

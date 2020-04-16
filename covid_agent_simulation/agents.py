@@ -26,7 +26,7 @@ class CoronavirusAgent(Agent):
         self.infected_steps = 0
         self.outside_steps = 0
         self.max_infection_steps = random.randint(min_infection_steps, max_infection_steps)
-        self.max_being_out_steps = random.randint(1,max_being_out_steps)
+        self.max_being_out_steps = random.randint(5,max_being_out_steps)
         self.home_id = home_id
         self.going_out_prob = going_out_prob
         self.config = config
@@ -127,7 +127,6 @@ class CoronavirusAgent(Agent):
                     self.random.uniform(0, 1) <\
                     self.model.infection_probabilities[moore_distance(self.pos, n.pos) - 1] and \
                     (self.home_id == n.home_id or not(self.__is_home(self.pos) or self.__is_home(n.pos))):
-                print(self.random.uniform(0, 1))
                 n.state = CoronavirusAgentState.INFECTED
 
     def step(self):
