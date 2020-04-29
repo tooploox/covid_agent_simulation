@@ -38,15 +38,15 @@ environment:
       - [14, 68]
 
 agent:
-    infected:
-      shape: "circle"
-      color: "red"
-    healthy:
-      shape: "circle"
-      color: "green"
-    recovered:
-      shape: "circle"
-      color: "blue"
+  infected:
+    shape: "covid_agent_simulation/resources/icon-infected.png"
+    color: null
+  healthy:
+    shape: "covid_agent_simulation/resources/icon-healthy.png"
+    color: null
+  recovered:
+    shape: "covid_agent_simulation/resources/icon-cured.png"
+    color: null
 
 patch:
   home:

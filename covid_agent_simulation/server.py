@@ -31,9 +31,9 @@ grid = CanvasGrid(agent_portrayal,
 # back = BackgroundSetter("https://www.tooploox.com/cdn/academic-program.png-24378a904f32a566ccf799a2dc4bdf8928d75bbe.png")
 
 chart = ChartModule([
-    {"Label": "Infected", "Color": "#FF0000"}, 
-    {"Label": "Healthy", "Color": "#00FF00"},
-    {"Label": "Recovered", "Color": "#0000FF"}],
+    {"Label": "Infected", "Color": "F40909"},
+    {"Label": "Healthy", "Color": "#00C38C"},
+    {"Label": "Recovered", "Color": "#006EFF"}],
     data_collector_name='datacollector'
 )
 
