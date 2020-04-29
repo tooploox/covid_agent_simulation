@@ -179,7 +179,7 @@ class CoronavirusAgent(Agent):
 
 
 class InteriorAgent(Agent):
-    def __init__(self, unique_id, model, color="AliceBlue", shape=None, interior_type=None, home_id=None):
+    def __init__(self, unique_id, model, color="#FFFFFF", shape=None, interior_type=None, home_id=None):
         super().__init__(unique_id, model)
         self.color = color
         self.interior_type = interior_type

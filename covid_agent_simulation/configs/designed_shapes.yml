@@ -1,8 +1,8 @@
 common:
   random_seed: 42
   grid:
-    rows: 50
-    cols: 80
+    rows: 25
+    cols: 40
     px_rows: 500
     px_cols: 900
   initially_infected_population: 0.1
@@ -13,45 +13,45 @@ common:
 
 environment:
   store:
-    map_path: 'store_map.npy'
+    map_path: 'design_park_map.npy'
     num_agents_allowed: 5
     max_time_outside: 15
     num_target_cells: 3
     entrance_cells:
-      - [35, 66]
+      - [17, 33]
   park:
-    map_path: 'park_map.npy'
+    map_path: 'design_park_map.npy'
     num_agents_allowed: 5
     max_time_outside: 15
     num_target_cells: 8
     entrance_cells:
-      - [35, 66]
-      - [34, 42]
+      - [17, 33]
+      - [17, 21]
   forest:
-    map_path: 'forest_map.npy'
+    map_path: 'design_park_map.npy'
     num_agents_allowed: 5
     max_time_outside: 15
     num_target_cells: 30
     entrance_cells:
-      - [35, 66]
-      - [34, 42]
-      - [14, 68]
+      - [17, 33]
+      - [17, 21]
+      - [7, 34]
 
 agent:
-    infected:
-      shape: "circle"
-      color: "red"
-    healthy:
-      shape: "circle"
-      color: "green"
-    recovered:
-      shape: "circle"
-      color: "blue"
+  infected:
+    shape: "covid_agent_simulation/resources/icon-infected.png"
+    color: null
+  healthy:
+    shape: "covid_agent_simulation/resources/icon-healthy.png"
+    color: null
+  recovered:
+    shape: "covid_agent_simulation/resources/icon-cured.png"
+    color: null
 
 patch:
   home:
     shape: "rect"
-    color: "yellow"
+    color: "#E7EAEE"
   park:
     shape: "rect"
-    color: "green"
+    color: "#D9E8FC"

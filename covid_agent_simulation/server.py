@@ -19,7 +19,7 @@ def agent_portrayal(agent):
     return agent.get_portrayal()
 
 
-config = get_config('./covid_agent_simulation/configs/simple_shapes.yml')
+config = get_config('./covid_agent_simulation/configs/designed_shapes.yml')
 grid = CanvasGrid(agent_portrayal,
                   config['common']['grid']['cols'],
                   config['common']['grid']['rows'],
@@ -31,7 +31,7 @@ grid = CanvasGrid(agent_portrayal,
 # back = BackgroundSetter("https://www.tooploox.com/cdn/academic-program.png-24378a904f32a566ccf799a2dc4bdf8928d75bbe.png")
 
 chart = ChartModule([
-    {"Label": "Infected", "Color": "F40909"},
+    {"Label": "Infected", "Color": "#F40909"},
     {"Label": "Healthy", "Color": "#00C38C"},
     {"Label": "Recovered", "Color": "#006EFF"}],
     data_collector_name='datacollector'
