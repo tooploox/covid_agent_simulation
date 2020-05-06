@@ -13,12 +13,12 @@ common:
 
 environment:
   store:
-    map_path: 'design_park_map.npy'
+    map_path: 'design_shop_map.npy'
     num_agents_allowed: 5
-    max_time_outside: 15
+    max_time_outside: 20
     num_target_cells: 3
     entrance_cells:
-      - [17, 33]
+      - [6, 25]
   park:
     map_path: 'design_park_map.npy'
     num_agents_allowed: 5
@@ -28,7 +28,7 @@ environment:
       - [17, 33]
       - [17, 21]
   forest:
-    map_path: 'design_park_map.npy'
+    map_path: 'design_forest_map.npy'
     num_agents_allowed: 5
     max_time_outside: 15
     num_target_cells: 30
