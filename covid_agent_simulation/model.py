@@ -157,10 +157,9 @@ class CoronavirusModel(Model):
         for r in range(grid_map.shape[0]):
             for c in range(grid_map.shape[1]):
                 if grid_map[r, c] == 0:
-                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.UNREACHABLE, grid_map[r, c])
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.UNREACHABLE, grid_map[r, c], color='white')
                 elif grid_map[r, c] == 1:
-                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.COMMON_SPACE, grid_map[r, c],
-                                        color='white')
+                    self.setup_interior(r, c, self.get_unique_id(), InteriorType.COMMON_SPACE, grid_map[r, c], color='#D9E8FC')
                 else:
                     self.setup_interior(r, c, self.get_unique_id(), InteriorType.HOME, grid_map[r, c],
                                         color='lightgray')
