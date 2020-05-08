@@ -5,7 +5,7 @@ from mesa.datacollection import DataCollector
 import numpy as np
 
 from .agents import (CoronavirusAgent, InteriorAgent,
-                     CoronavirusAgentState, InteriorType, WallAgent)
+                     CoronavirusAgentState, InteriorType)
 
 
 class Counter:
@@ -25,7 +25,7 @@ class Counter:
 
 class CoronavirusModel(Model):
     def __init__(self, num_agents=10,
-                 config=None, scenario='park', going_out_prob_mean=0.05):
+                 config=None, scenario='park', going_out_prob_mean=0.05, num_agents_allowed_outside=5):
 
         self.config = config
         np.random.RandomState(config['common']['random_seed'])
@@ -48,17 +48,13 @@ class CoronavirusModel(Model):
             common_space_cells[np.random.choice(range(len(common_space_cells)),
                                            size=self.config['environment'][scenario]['num_target_cells'])]
         self.counter = Counter()
-        self.num_agents_allowed_outside = self.config['environment'][scenario]['num_agents_allowed']
+        self.num_agents_allowed_outside = num_agents_allowed_outside
 
         self.going_out_prob_mean = going_out_prob_mean/10
         self.global_max_index = 0
         self.infection_probabilities = self.config['common']['infection_probabilities']
 
         self.setup_interiors(grid_map)
-
-        # Maybe it will look better with walls
-        # if we're going to have irregular shapes, but I don't know...
-        #self.setup_walls()
 
         self.setup_agents()
         self.setup_common_area_entrance(self.config['environment'][scenario]['entrance_cells'])
@@ -84,28 +80,6 @@ class CoronavirusModel(Model):
 
         return unique_id
 
-    def setup_walls(self):
-        """
-        The idea here is that if we had 3 types of cells,
-        we could draw interiors as some irregular shapes where
-        agents can walk like aisles inside a store or alleys in a park.
-        In that case, to improve it visually we could bound those shapes
-        with "walls". Unfortunately it doesn't look that good in practice...
-        """
-
-        x_min = 10  # it would be extracted from a list of already drawn patches.
-        x_max = 18
-        y_min = 9
-        y_max = 17
-
-        for x in range(x_min, x_max):
-            w_1 = WallAgent(self.get_unique_id(), self, type='horizontal')
-            w_2 = WallAgent(self.get_unique_id(), self, type='horizontal')
-            self.grid.place_agent(w_1, (x, y_max))
-            self.grid.place_agent(w_2, (x, y_min))
-
-        # Vertical lines look strange...
-
     def setup_agents(self):
         home_coors = []
         for info in self.grid.coord_iter():
@@ -130,12 +104,12 @@ class CoronavirusModel(Model):
 
             home_id = [a.home_id for a in self.grid.get_cell_list_contents((x, y)) if type(a) == InteriorAgent]
             state = CoronavirusAgentState.HEALTHY
-            # if np.random.rand() < self.config['common']['initially_infected_population']:
             # number of initially infected should not be random but a percentage
-            if nb_infected < int(self.config['common']['initially_infected_population'] *self.num_agents):
+
+            if nb_infected < int(self.config['common']['initially_infected_population'] * self.num_agents):
                 state = CoronavirusAgentState.INFECTED
-                nb_infected +=1
-            elif nb_recovered < int(self.config['common']['initially_recovered_population'] *self.num_agents):
+                nb_infected += 1
+            elif nb_recovered < int(self.config['common']['initially_recovered_population'] * self.num_agents):
                 state = CoronavirusAgentState.RECOVERED
                 nb_recovered += 1
             a = CoronavirusAgent(self.get_unique_id(), self, state, home_id=home_id,
@@ -182,7 +156,6 @@ class CoronavirusModel(Model):
     def run_model(self, n):
         for i in range(n):
             self.step()
-
 
 def all_infected(model):
     return get_all_in_state(model, CoronavirusAgentState.INFECTED)\

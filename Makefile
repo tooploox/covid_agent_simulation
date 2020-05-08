@@ -19,6 +19,10 @@ dev_gui:
 		--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 		-w="/project" \
 		$(IMAGE_NAME)
+
+install_mesa:
+	cd libs/mesa&&pip3 install -e .
+
 lab:
 	docker run --rm -ti  \
 		-p $(PORT):$(PORT) \

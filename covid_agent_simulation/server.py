@@ -6,8 +6,6 @@ from mesa.visualization.UserParam import UserSettableParameter
 from .model import CoronavirusModel
 from .utils import get_config
 
-import numpy as np
-
 
 class BackgroundSetter(VisualizationElement):
     def __init__(self, url):
@@ -19,7 +17,7 @@ def agent_portrayal(agent):
     return agent.get_portrayal()
 
 
-config = get_config('./covid_agent_simulation/configs/designed_shapes.yml')
+config = get_config('./covid_agent_simulation/configs/designed_shapes_alternative.yml')
 grid = CanvasGrid(agent_portrayal,
                   config['common']['grid']['cols'],
                   config['common']['grid']['rows'],
@@ -34,17 +32,23 @@ chart = ChartModule([
     {"Label": "Infected", "Color": "#F40909"},
     {"Label": "Healthy", "Color": "#00C38C"},
     {"Label": "Recovered", "Color": "#006EFF"}],
-    data_collector_name='datacollector'
+    data_collector_name='datacollector',
+    canvas_width=config['common']['grid']['px_cols'],
+    canvas_height=config['common']['chart']['height']
 )
 
 model_params = {
     "num_agents":
-        UserSettableParameter('slider', "Number of agents", 10, 2, 200, 1,
+        UserSettableParameter('slider', "Number of agents", 400, 10, 400, 10,
                               description="Choose how many agents to include in the model"),
     "going_out_prob_mean":
-        UserSettableParameter('slider', "Average probability of leaving home", 0.5, 0, 1, 0.1,
-                               description="Choose how probably, in general, will be going out"),
-
+        UserSettableParameter('slider', "Average probability of leaving home", value=0.5, min_value=0,
+                              max_value=1, step=0.1,
+                            description="Choose how probably, in general, will be going out"),
+    "num_agents_allowed_outside":
+        UserSettableParameter('slider', "Max number of agents in the public space", value=5, min_value=5,
+                               max_value=50, step=1,
+                               description="Choose choose number of agents allowed in a public space"),
     "scenario": UserSettableParameter('choice', 'Scenario', value='store',
                                       choices=['store', 'park', 'forest']),
     "config": config

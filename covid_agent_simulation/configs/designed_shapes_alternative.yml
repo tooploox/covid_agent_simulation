@@ -1,0 +1,62 @@
+common:
+  random_seed: 42
+  grid:
+    rows: 40
+    cols: 98
+    px_rows: 560
+    px_cols: 1568
+  chart:
+    height: 324
+  initially_infected_population: 0.03
+  initially_recovered_population: 0.1
+  infection_probabilities:
+    - 0.5
+    - 0.2
+
+environment:
+  store:
+    map_path: 'design_shop_map_alternative.npy'
+    num_agents_allowed: 15
+    max_time_outside: 5
+    num_target_cells: 3
+    entrance_cells:
+      - [16, 29]
+      - [16, 50]
+      - [25, 42]
+  park:
+    map_path: 'design_park_map.npy'
+    num_agents_allowed: 5
+    max_time_outside: 15
+    num_target_cells: 8
+    entrance_cells:
+      - [17, 33]
+      - [17, 21]
+  forest:
+    map_path: 'design_forest_map.npy'
+    num_agents_allowed: 5
+    max_time_outside: 15
+    num_target_cells: 30
+    entrance_cells:
+      - [7, 33]
+      - [21,14]
+      - [21, 33]
+      - [5, 17]
+
+agent:
+  infected:
+    shape: "covid_agent_simulation/resources/icon-infected.png"
+    color: null
+  healthy:
+    shape: "covid_agent_simulation/resources/icon-healthy.png"
+    color: null
+  recovered:
+    shape: "covid_agent_simulation/resources/icon-cured.png"
+    color: null
+
+patch:
+  home:
+    shape: "rect"
+    color: "#E7EAEE"
+  park:
+    shape: "rect"
+    color: "#D9E8FC"
