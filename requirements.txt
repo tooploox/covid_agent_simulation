@@ -1,4 +1,4 @@
-jupyterlab==0.35.6
+jupyterlab==1.2.21
 matplotlib
 Mesa==0.8.6
 numpy==1.17.1
