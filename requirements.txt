@@ -1,7 +1,7 @@
 jupyterlab==0.35.6
 matplotlib
 Mesa==0.8.6
-numpy==1.17.1
+numpy==1.22.0
 opencv-python==4.1.0.25
 pandas==0.24.0
 Pillow==6.2.0
